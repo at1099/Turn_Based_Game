@@ -1,4 +1,4 @@
-package org.example.map;
+package game;
 
 public class GameMap {
 }

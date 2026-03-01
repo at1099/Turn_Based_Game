@@ -1,19 +1,20 @@
-package org.example;
+package game;
 import javafx.application.Application;
 import javafx.stage.Stage;
-import org.example.ui.GameView;
 
 public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-        // Stage gets javaFX to create the window
-        GameView view = new GameView();
-        view.createGrid(stage);
+        int numAllies = 5;
+        int numEnemies = 10;
 
+        GameView view = new GameView();
+        view.createGrid(stage, numAllies, numEnemies);
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(args);
     }
 }
+
