@@ -30,7 +30,6 @@ public class Unit {
         return x;
     }
 
-
     public void setX(int x) {
         this.x = x;
     }
