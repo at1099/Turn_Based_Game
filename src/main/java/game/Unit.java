@@ -99,6 +99,13 @@ public class Unit {
             currentHealth = maxHealth;
         }
     }
+
+    public boolean IsInRange(int newX, int newY){
+        int xDistance = Math.abs(newX-x);
+        int yDistance = Math.abs(newY-y);
+
+        return (xDistance <= moveRadius && yDistance <= moveRadius);
+    }
 }
 
 class LightSoldier extends Unit{
