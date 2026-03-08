@@ -1,85 +1,65 @@
 package game;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 public class Unit {
-    private int x;
-    private int y;
+
+    private Tile position;
     private String name;
     private boolean isAlly;
-    private boolean canSummon;
-    private final int maxHealth;
-    private int currentHealth;
-    private int moveRadius;
-    private ArrayList<Attack> attacks;
 
-    public Unit(int x, int y, String name, boolean isAlly, boolean canSummon, int maxHealth, int moveRadius, ArrayList<Attack> attacks){
-        this.x = x;
-        this.y = y;
+    private UnitType type;
+    private UnitState state;
+
+    private int currentHealth;
+    private List<AttackType> attacks;
+
+    public Unit(Tile position, String name, boolean isAlly, UnitType type, UnitState state) {
+        this.position = position;
         this.name = name;
         this.isAlly = isAlly;
-        this.canSummon = canSummon;
+        this.type = type;
+        this.state = state;
 
-        this.maxHealth = maxHealth;
-        this.currentHealth = maxHealth;
-        this.moveRadius = moveRadius;
-        this.attacks = attacks;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isAlly() {
-        return isAlly;
-    }
-
-    public void setAlly(boolean ally) {
-        isAlly = ally;
+        this.currentHealth = type.getMaxHealth();
+        this.attacks = new ArrayList<>(type.getAttacks());
     }
 
     public int getMoveRadius() {
-        return moveRadius;
+        return type.getMoveRadius();
     }
 
-    public void setMoveRadius(int moveRadius) {
-        this.moveRadius = moveRadius;
-    }
-
-    public ArrayList<Attack> getAttacks() {
-        return attacks;
-    }
-
-    public void addAttack(Attack newAttack) { //add/remove??
-        attacks.add(newAttack);
-    }
-
-    public void removeAttack(int attackIndex) { //add/remove??
-        attacks.remove(attackIndex);
+    public boolean canSummon() {
+        return type.canSummon();
     }
 
     public int getMaxHealth() {
-        return maxHealth;
+        return type.getMaxHealth();
+    }
+
+    public UnitType getType(){
+        return type;
+    }
+
+    public UnitState getState(){
+        return state;
+    }
+
+    public void setState(UnitState state){
+        this.state = state;
+    }
+
+    public Tile getPosition(){
+        return position;
+    }
+
+    public void setPosition(Tile position){
+        this.position = position;
+    }
+
+    public List<AttackType> getAttacks() {
+        return attacks;
     }
 
     public int getCurrentHealth() {
@@ -95,33 +75,24 @@ public class Unit {
 
     public void heal(int amount) {
         currentHealth += amount;
-        if (currentHealth > maxHealth) {
-            currentHealth = maxHealth;
+        if (currentHealth > type.getMaxHealth()) {
+            currentHealth = type.getMaxHealth();
         }
     }
 
-    public boolean IsInRange(int newX, int newY){
-        int xDistance = Math.abs(newX-x);
-        int yDistance = Math.abs(newY-y);
-
-        return (xDistance <= moveRadius && yDistance <= moveRadius);
+    public boolean canMove(Tile tile){
+        int distance = Math.abs(tile.getX()-position.getX()) + Math.abs(tile.getY()-position.getY());
+        return distance < getMoveRadius();
     }
-}
 
-class LightSoldier extends Unit{
-    public LightSoldier(int x, int y, String name, boolean isAlly){
-        super(x, y, name, isAlly, false, 200, 5, new ArrayList<>(Arrays.asList(new ShortSword(), new LongSword(), new CrossBow())));
+    public void attack(Unit target){
+        //how can player select an attack?
     }
-}
 
-class LightArcher extends Unit{
-    public LightArcher(int x, int y, String name, boolean isAlly){
-        super(x, y, name, isAlly, false, 100, 7, new ArrayList<>(Arrays.asList(new ShortSword(), new CrossBow(), new LongBow())));
-    }
-}
-
-class King extends Unit{
-    public King(int x, int y, String name, boolean isAlly){
-        super(x, y, name, isAlly, true, 500, 10, new ArrayList<>(Arrays.asList(new ShortSword(), new CrossBow(), new LongBow(), new Excalibur())));
+    public void moveTo(Tile tile){
+        position.removeUnit();
+        position = tile;
+        tile.setUnit(this);
+        state = UnitState.IDLE;
     }
 }

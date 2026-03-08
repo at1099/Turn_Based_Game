@@ -2,15 +2,33 @@ package game;
 
 import exceptions.InvalidLocationException;
 
+/* represents a level */
 public class GameMap {
     private int width;
     private int height;
-    private Object[][] grid;
+    private Tile[][] tileGrid;
 
     public GameMap(int width, int height){
         this.width = width;
         this.height = height;
-        this.grid = new Object[width][height];
+        this.tileGrid = new Tile[width][height];
+
+        // initialize all tiles as grass by default
+        for(int x = 0; x < width; x++){
+            for(int y = 0; y < height; y++){
+                tileGrid[x][y] = new Tile(TileType.GRASS);
+                tileGrid[x][y].setX(x);
+                tileGrid[x][y].setY(y);
+            }
+        }
+    }
+
+    public Tile getTile(int x, int y){
+        return tileGrid[x][y];
+    }
+
+    public Tile[][] getTiles() {
+        return tileGrid;
     }
 
     public int getWidth() {
@@ -21,43 +39,9 @@ public class GameMap {
         return height;
     }
 
-    public Object[][] getGrid(){
-        return grid;
-    }
-
-    public void addObject(int x, int y, Object object) throws InvalidLocationException {
-        if (grid[x][y] != null){
-            throw new InvalidLocationException("Location already has an object in it");
-        }
-        grid[x][y] = object;
-    }
-
-    public void removeObject(int x, int y) throws InvalidLocationException{
-        if (grid[x][y] == null){
-            throw new InvalidLocationException("Location has no object in it");
-        }
-        grid[x][y] = null;
-    }
-
-    public boolean IsObstacle(int x, int y){
-        return grid[x][y] instanceof Obstacle;
-    }
-
-    public boolean IsEnemy(int x, int y){
-        return (grid[x][y] instanceof Unit && !grid[x][y].isAlly());
-    }
-
-    public boolean LegalMove(Unit unit, int newX, int newY){
-        if (unit.IsInRange(newX, newY) && !IsObstacle(newX, newY)){
-            return true;
-        }
-        return false;
-    }
-
-    public boolean LegalAttack(Unit unit, int newX, int newY){
-        if (unit.IsInRange(newX, newY) && IsEnemy(newX, newY)){
-            return true;
-        }
-        return false;
+    public void placeUnit(Unit unit, int x, int y){
+        Tile tile = tileGrid[x][y];
+        tile.setUnit(unit);
+        unit.setPosition(tile);
     }
 }

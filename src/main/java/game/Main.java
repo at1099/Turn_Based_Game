@@ -1,82 +1,104 @@
 package game;
+
 import javafx.application.Application;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
-import javafx.scene.control.Button;
-import javafx.scene.Scene;
-import javafx.geometry.Insets;
+import javafx.stage.Stage; //is the window
+import javafx.scene.Scene; //one screen inside a window (e.g. main menu)
+import javafx.scene.layout.VBox; //layout that stacks items vertically
+import javafx.scene.control.Button; //lets you create buttons
+import javafx.scene.control.Label; //allows you to display text
+import javafx.geometry.Pos; //controls alignment of layouts
+import javafx.scene.layout.GridPane; //lets you make gridPnaes
 
-import java.awt.*;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.Color;
 
-public class Main extends Application { //this means that it can use methods from the Application class
+public class Main extends Application { //main inherits behaviour from Application
 
-    Stage window;
-    Scene MainMenu;
-    Scene level1Scene;
-    Button level1Button;
+    private Stage window; //stores current window so it can be changed
+    private GameMap gameMap;
+    private GameManager gameManager;
 
-    public static void main(String[] args){
-        launch(args); //runs the launch method in Application
-    }
+    private final int TILE_SIZE = 50;
 
-    public void Level1(){
-        System.out.println("Level 1 started");
-        GridPane gridPane = new GridPane(); //layout (in a grid)
-        gridPane.setPadding(new Insets(10,10,10,10)); //makes a 10 pixel space between the window and gridpane
-        gridPane.setVgap(10); //space between vertical squares
-        gridPane.setHgap(10); //space between horiz squares
-
-        Label instructions = new Label("Green square is one team, Blue square is another, Red is obstacle, Purple is village, Yellow is castle");
-
-        //draw grid
-        Level level1 = new Level();
-        Object[][] grid = level1.initialise();
-
-        String colour;
-        for (int i = 0; i < grid.getWidth(); i++){
-            for (int j = 0; j < grid.getHeight(); j++){
-                switch (grid[i][j]){
-                    case instanceof Unit:
-                        if (grid[i][j].isAlly()){
-                            colour = "Green";
-                        }else{
-                            colour = "Blue";
-                        }
-                    case instanceof Obstacle:
-                        colour = "Red";
-                    case instanceof Village:
-                        colour = "Purple";
-                    case instanceof Castle:
-                        colour = "Yellow";
-                    case instanceof null:
-                        colour = "Grey"; //change to actually do the gridPnae
-                } //make them all buttons how?
-            }
-        }
-
-        level1Scene = new Scene(gridPane, 500, 500);
+    public static void main(String[] args) {
+        launch(args); //starts javafx, creates ui thread and calls start()
     }
 
     @Override
-    public void start(Stage primaryStage) {
-        window = primaryStage;
-        window.setTitle("Main Menu");
+    public void start(Stage primaryStage) { //where program actually begins, javafx provides a stage
+        window = primaryStage; //save stage for later access
+        window.setTitle("Fantasy Strategy Game"); //name
 
-        Label label = new Label("Welcome to the game!");
-        level1Button = new Button("Level 1");
-        level1Button.setOnAction(e -> Level1()); //makes the button run the Level1 method
+        Label title = new Label("Fantasy Strategy Game"); //creates text on screen
+        Button startButton = new Button("Start Game"); //start game button
 
-        StackPane layout = new StackPane(); //how all buttons and labels are laid out
-        layout.getChildren().add(level1Button); //adds item to layout
+        startButton.setOnAction(e -> window.setScene(createGameScene())); //tells program to run showGameScene when button is clicked
 
-        MainMenu = new Scene(layout, 500, 500); //creates a new scene with the layout inside 500x500 pixels
-        primaryStage.setScene(MainMenu); //sets the stage's contents to the scene
-        primaryStage.show(); //shows it on the screen
+        VBox menuLayout = new VBox(20); //creates layou with 20 pixel spacing between elements
+        menuLayout.setAlignment(Pos.CENTER); //Centres everything in layout
+        menuLayout.getChildren().addAll(title, startButton); //Adds items to layout
 
+        Scene menuScene = new Scene(menuLayout, 800, 600); //creates scene
 
+        window.setScene(menuScene); //sets scene as active scene
+        window.show(); //shows scene
     }
 
-}
+    private Scene createGameScene() { //creates the board
+        gameMap = new GameMap(10, 10);
+        gameManager = new GameManager(gameMap);
 
+        GridPane mapGrid = new GridPane();
+
+        for (int x = 0; x < gameMap.getWidth(); x++) {
+            for (int y = 0; y < gameMap.getHeight(); y++) {
+                Tile tile = gameMap.getTile(x, y);
+
+                Rectangle rect = new Rectangle(TILE_SIZE, TILE_SIZE);
+                rect.setFill(Color.LIGHTGREEN);
+                rect.setStroke(Color.BLACK);
+                tile.setRectangle(rect);
+
+                int finalX = x;
+                int finalY = y;
+
+                rect.setOnMouseClicked(e -> {
+                    gameManager.handleTileClick(finalX, finalY);
+                    redrawBoard();
+                });
+
+
+                StackPane cell = new StackPane();
+                cell.getChildren().add(rect);
+
+                mapGrid.add(cell, x, y);
+            }
+        }
+
+        // place some example units
+        Unit king = new Unit(gameMap.getTile(2, 2), "King", true, UnitType.KING, UnitState.IDLE);
+        gameMap.placeUnit(king, 2, 2);
+
+        redrawBoard(); // draw units
+
+        return new Scene(mapGrid, 600, 600);
+    }
+
+    private void redrawBoard() {
+        for (int x = 0; x < gameMap.getWidth(); x++) {
+            for (int y = 0; y < gameMap.getHeight(); y++) {
+                Tile tile = gameMap.getTile(x, y);
+                Rectangle rect = tile.getRectangle();
+
+                if (tile.isHighlighted()) {
+                    rect.setFill(Color.YELLOW);
+                } else {
+                    rect.setFill(Color.LIGHTGREEN);
+                }
+
+                // TODO: draw unit images on top of rectangle
+            }
+        }
+    }
+}

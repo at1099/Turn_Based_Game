@@ -1,95 +1,48 @@
 package game;
 
 public class Attack {
-    private int damage;
-    private int radius;
-    private int chanceToHit;
-    private int reloadTicks;
-    private int numStrikes;
 
-    public Attack(int damage, int radius, int chanceToHit, int reloadTicks, int numStrikes) {
-        this.damage = damage;
-        this.radius = radius;
-        this.chanceToHit = chanceToHit;
-        this.reloadTicks = reloadTicks; //only count ally ticks
-        this.numStrikes = numStrikes;
+    private AttackType type;
+    private int cooldownRemaining;
+
+    public Attack(AttackType type) {
+        this.type = type;
+        this.cooldownRemaining = 0;
     }
 
-    public int getDamage(){
-        return damage;
+    public AttackType getType() {
+        return type;
     }
 
-    public void setDamage(int damage){ //is this needed??
-        this.damage = damage;
+    public int getDamage() {
+        return type.getDamage();
     }
 
-    public int getRadius(){
-        return radius;
+    public int getRadius() {
+        return type.getRadius();
     }
 
-    public void setRadius(int radius){ //is this needed??
-        this.radius = radius;
+    public int getChanceToHit() {
+        return type.getChanceToHit();
     }
 
-    public int getChanceToHit(){
-        return chanceToHit;
+    public int getReloadTicks() {
+        return type.getReloadTicks();
     }
 
-    public void setChanceToHit(int chanceToHit){ //is this needed??
-        this.chanceToHit = chanceToHit;
+    public int getNumStrikes() {
+        return type.getNumStrikes();
     }
 
-    public int getReloadTicks(){
-        return reloadTicks;
+    public int getCooldownRemaining() {
+        return cooldownRemaining;
     }
 
-    public void setReloadTicks(int reloadTicks){ //is this needed??
-        this.reloadTicks = reloadTicks;
+    public void incrementCooldownRemaining(){
+        cooldownRemaining -= 1;
     }
 
-    public int getNumStrikes(){
-        return numStrikes;
-    }
-
-    public void setNumStrikes(int numStrikes){ //is this needed??
-        this.numStrikes = numStrikes;
+    public void setCooldownRemaining(int cooldownRemaining) {
+        this.cooldownRemaining = cooldownRemaining;
     }
 }
-
-class ShortSword extends Attack{
-    public ShortSword(){
-        super(25, 2, 75, 1, 3);
-    }
-}
-
-class LongSword extends Attack{
-    public LongSword(){
-        super(50, 3, 50, 3, 2);
-    }
-}
-
-class CrossBow extends Attack{
-    public CrossBow(){
-        super(10, 6, 50, 2, 4);
-    }
-}
-
-class LongBow extends Attack{
-    public LongBow(){
-        super(30, 15, 30, 5, 7);
-    }
-}
-
-class Excalibur extends Attack{
-    public Excalibur(){
-        super(100, 4, 60, 6, 2);
-    }
-}
-
-/*
-class Shield extends Attack{
-    public Shield(){
-        super(10, 5, 50);
-    }
-}
-*/

@@ -21,8 +21,4 @@ public class Level {
         this.currentEnemyCount = currentEnemyCount;
         this.levelName = levelName;
     }
-
-    public Object[][] Initialise(){ //file input??
-        return map;
-    }
 }
