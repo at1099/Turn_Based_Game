@@ -1,4 +1,6 @@
-package game;
+package game.units;
+import game.Assets;
+import javafx.scene.image.Image;
 
 import java.util.List;
 
@@ -8,33 +10,39 @@ public enum UnitType {
             200,
             5,
             false,
-            List.of(AttackType.SHORT_SWORD, AttackType.LONG_SWORD, AttackType.CROSSBOW)
+            List.of(AttackType.SHORT_SWORD, AttackType.LONG_SWORD, AttackType.CROSSBOW),
+            Assets.KNIGHT
     ),
 
     LIGHT_ARCHER(
             100,
             7,
             false,
-            List.of(AttackType.SHORT_SWORD, AttackType.CROSSBOW, AttackType.LONGBOW)
+            List.of(AttackType.SHORT_SWORD, AttackType.CROSSBOW, AttackType.LONGBOW),
+            Assets.ARCHER
     ),
 
     KING(
             500,
             10,
             true,
-            List.of(AttackType.SHORT_SWORD, AttackType.CROSSBOW, AttackType.LONGBOW, AttackType.EXCALIBUR)
+            List.of(AttackType.SHORT_SWORD, AttackType.CROSSBOW, AttackType.LONGBOW, AttackType.EXCALIBUR),
+            Assets.KING
     );
 
     private final int maxHealth;
     private final int moveRadius;
     private final boolean canSummon;
     private final List<AttackType> attacks;
+    private Image image;
 
-    UnitType(int maxHealth, int moveRadius, boolean canSummon, List<AttackType> attacks) {
+    UnitType(int maxHealth, int moveRadius, boolean canSummon, List<AttackType> attacks, Image image) {
         this.maxHealth = maxHealth;
         this.moveRadius = moveRadius;
         this.canSummon = canSummon;
         this.attacks = attacks;
+        this.image = image;
+
     }
 
     public int getMaxHealth() {
@@ -51,5 +59,9 @@ public enum UnitType {
 
     public List<AttackType> getAttacks() {
         return attacks;
+    }
+
+    public Image getImage() {
+        return image;
     }
 }

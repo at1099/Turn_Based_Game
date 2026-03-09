@@ -1,5 +1,9 @@
 package game;
 
+import game.board.GameMap;
+import game.board.Tile;
+import game.units.Unit;
+
 public class GameManager {
     private GameMap currentLevel;
     private Unit selectedUnit;
@@ -16,7 +20,7 @@ public class GameManager {
     public void clearHighlights(){
         for(int x = 0; x < currentLevel.getWidth(); x++){
             for(int y = 0; y < currentLevel.getHeight(); y++){
-                currentLevel.getTile(x,y).clearHighlight();
+                currentLevel.getTile(x,y).setHighlighted(false);
             }
         }
     }
@@ -29,13 +33,25 @@ public class GameManager {
         unit.moveTo(destination);
     }
 
+    public void highlightPossibleMoveSquares(Unit selectedUnit){
+        for(int x = 0; x < currentLevel.getWidth(); x++) {
+            for (int y = 0; y < currentLevel.getHeight(); y++) {
+                Tile currentTile = currentLevel.getTile(x,y);
+                if (!selectedUnit.canMove(currentTile)){
+                    currentTile.setGreyedOut(true);
+                }
+            }
+        }
+    }
+
     public void handleTileClick(int x, int y){
         Tile clickedTile = currentLevel.getTile(x, y);
 
         if(selectedUnit == null){
             if(clickedTile.getUnit() != null){
                 selectedUnit = clickedTile.getUnit();
-                clickedTile.highlight();
+                clickedTile.setHighlighted(true);
+                highlightPossibleMoveSquares(selectedUnit);
             }
         } else {
             if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null){

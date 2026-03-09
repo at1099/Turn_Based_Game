@@ -1,5 +1,12 @@
 package game;
 
+import game.board.Building;
+import game.board.BuildingType;
+import game.board.GameMap;
+import game.board.Tile;
+import game.units.Unit;
+import game.units.UnitState;
+import game.units.UnitType;
 import javafx.application.Application;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage; //is the window
@@ -12,6 +19,8 @@ import javafx.scene.layout.GridPane; //lets you make gridPnaes
 
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
+
+import java.awt.*;
 
 public class Main extends Application { //main inherits behaviour from Application
 
@@ -26,6 +35,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
     }
 
     @Override
+    //runs the main menu
     public void start(Stage primaryStage) { //where program actually begins, javafx provides a stage
         window = primaryStage; //save stage for later access
         window.setTitle("Fantasy Strategy Game"); //name
@@ -45,59 +55,69 @@ public class Main extends Application { //main inherits behaviour from Applicati
         window.show(); //shows scene
     }
 
-    private Scene createGameScene() { //creates the board
-        gameMap = new GameMap(10, 10);
+    private Scene createGameScene() {
+
+        int width = 10;
+        int height = 10;
+        gameMap = new GameMap(width, height);
         gameManager = new GameManager(gameMap);
 
         GridPane mapGrid = new GridPane();
 
-        for (int x = 0; x < gameMap.getWidth(); x++) {
-            for (int y = 0; y < gameMap.getHeight(); y++) {
-                Tile tile = gameMap.getTile(x, y);
+        // --- 1. Create tiles and add to GridPane ---
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Tile tile = gameMap.getTile(x, y); // already created in GameMap
 
-                Rectangle rect = new Rectangle(TILE_SIZE, TILE_SIZE);
-                rect.setFill(Color.LIGHTGREEN);
-                rect.setStroke(Color.BLACK);
-                tile.setRectangle(rect);
+                // Add the StackPane from Tile to GridPane
+                mapGrid.add(tile.getNode(), x, y);
 
                 int finalX = x;
                 int finalY = y;
 
-                rect.setOnMouseClicked(e -> {
+                // Handle clicks for selection/movement
+                tile.getNode().setOnMouseClicked(e -> {
                     gameManager.handleTileClick(finalX, finalY);
                     redrawBoard();
                 });
-
-
-                StackPane cell = new StackPane();
-                cell.getChildren().add(rect);
-
-                mapGrid.add(cell, x, y);
             }
         }
 
-        // place some example units
-        Unit king = new Unit(gameMap.getTile(2, 2), "King", true, UnitType.KING, UnitState.IDLE);
-        gameMap.placeUnit(king, 2, 2);
+        // --- 2. Place static buildings (set once, no redraw needed) ---
+        Tile castleTile = gameMap.getTile(3, 3);
+        Building castle = new Building(BuildingType.CASTLE, castleTile);
+        castleTile.setBuilding(castle);
 
-        redrawBoard(); // draw units
+        Tile villageTile = gameMap.getTile(6, 2);
+        Building village = new Building(BuildingType.VILLAGE, villageTile);
+        villageTile.setBuilding(village);
 
-        return new Scene(mapGrid, 600, 600);
+        // --- 3. Place units ---
+        Tile knightTile = gameMap.getTile(1, 1);
+        Unit knight = new Unit(knightTile, "Knight", true, UnitType.LIGHT_SOLDIER, UnitState.IDLE);
+        knightTile.setUnit(knight);
+
+        Tile archerTile = gameMap.getTile(2, 1);
+        Unit archer = new Unit(archerTile, "Archer", true, UnitType.LIGHT_ARCHER, UnitState.IDLE);
+        archerTile.setUnit(archer);
+
+        // --- 4. Initial redraw (highlights/units) ---
+        redrawBoard();
+
+        return new Scene(mapGrid, width * TILE_SIZE, height * TILE_SIZE);
     }
 
     private void redrawBoard() {
         for (int x = 0; x < gameMap.getWidth(); x++) {
             for (int y = 0; y < gameMap.getHeight(); y++) {
                 Tile tile = gameMap.getTile(x, y);
-                Rectangle rect = tile.getRectangle();
 
+                // Highlight overlay
                 if (tile.isHighlighted()) {
-                    rect.setFill(Color.YELLOW);
+                    tile.setHighlighted(true); // shows yellow overlay
                 } else {
-                    rect.setFill(Color.LIGHTGREEN);
+                    tile.setHighlighted(false); // hides overlay
                 }
-
-                // TODO: draw unit images on top of rectangle
             }
         }
     }

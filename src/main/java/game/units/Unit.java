@@ -1,7 +1,11 @@
-package game;
+package game.units;
+
+import game.board.Tile;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javafx.scene.image.Image;
 
 public class Unit {
 

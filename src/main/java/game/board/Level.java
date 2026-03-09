@@ -1,4 +1,6 @@
-package game;
+package game.board;
+
+import game.units.Unit;
 
 public class Level {
     public final int MAX_ENEMIES = 10; //for now

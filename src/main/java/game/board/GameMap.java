@@ -1,6 +1,6 @@
-package game;
+package game.board;
 
-import exceptions.InvalidLocationException;
+import game.units.Unit;
 
 /* represents a level */
 public class GameMap {
@@ -16,9 +16,7 @@ public class GameMap {
         // initialize all tiles as grass by default
         for(int x = 0; x < width; x++){
             for(int y = 0; y < height; y++){
-                tileGrid[x][y] = new Tile(TileType.GRASS);
-                tileGrid[x][y].setX(x);
-                tileGrid[x][y].setY(y);
+                tileGrid[x][y] = new Tile(TileType.GRASS, x, y);
             }
         }
     }
