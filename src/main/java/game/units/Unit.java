@@ -1,5 +1,6 @@
 package game.units;
 
+import game.PlayerTurn;
 import game.board.Tile;
 
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ public class Unit {
 
     private Tile position;
     private String name;
-    private boolean isAlly;
+    private PlayerTurn currentTeam;
 
     private UnitType type;
     private UnitState state;
@@ -19,15 +20,23 @@ public class Unit {
     private int currentHealth;
     private List<AttackType> attacks;
 
-    public Unit(Tile position, String name, boolean isAlly, UnitType type, UnitState state) {
+    public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
         this.name = name;
-        this.isAlly = isAlly;
+        this.currentTeam = currentTeam;
         this.type = type;
         this.state = state;
 
         this.currentHealth = type.getMaxHealth();
         this.attacks = new ArrayList<>(type.getAttacks());
+    }
+
+    public PlayerTurn getCurrentTeam(){
+        return currentTeam;
+    }
+
+    public void setCurrentTeam(PlayerTurn currentTeam){
+        this.currentTeam = currentTeam;
     }
 
     public int getMoveRadius() {

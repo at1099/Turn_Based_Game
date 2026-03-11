@@ -20,6 +20,14 @@ public class TurnManager {
         return currentTurn;
     }
 
+    public void switchTurn(){
+        if (currentTurn == PlayerTurn.PLAYER){
+            currentTurn = PlayerTurn.ENEMY;
+        }else{
+            currentTurn = PlayerTurn.PLAYER;
+        }
+    }
+
     public void setCurrentTurn(PlayerTurn currentTurn){
         this.currentTurn = currentTurn;
     }

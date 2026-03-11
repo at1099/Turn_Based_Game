@@ -9,16 +9,19 @@ import javafx.scene.image.ImageView;
 
 public class Tile {
     public static final Color HIGHLIGHT_YELLOW = Color.color(1,1,0,0.4);
-    public static final Color GREYED_OUT = Color.color(0.0, 0.3, 0.0, 0.6); // semi-transparent gray
+    public static final Color GREYED_OUT = Color.color(0.4, 0.4, 0.4, 0.6); // semi-transparent gray
+    public static final Color HIGHLIGHT_BLUE = Color.color(0.2, 0.6, 1.0, 0.4);
+    public static final Color HIGHLIGHT_GREEN = Color.color(0.2, 1, 0.2, 0.4);
+    public static final Color HIGHLIGHT_RED = Color.color(1, 0.3, 0.3, 0.4);
 
     private TileType type;
     private int x;
     private int y;
 
+    private Rectangle highlight;
     private Building building;
     private ImageView backgroundImage;
     private ImageView buildingImage;
-    private Rectangle highlight;
     private Unit unit;
     private ImageView unitImage;
     private StackPane stack;
@@ -44,6 +47,7 @@ public class Tile {
         unitImage.setFitHeight(48);
 
         stack = new StackPane(backgroundImage, highlight, buildingImage, unitImage);
+        stack.setStyle("-fx-border-color: black; -fx-border-width: 0.5;"); //creates balck gap
     }
 
     public StackPane getNode() {
@@ -52,6 +56,17 @@ public class Tile {
 
     public Building getBuilding() {
         return building;
+    }
+
+    public void clearBorderHighlight(){
+        stack.setStyle("-fx-border-color: black; -fx-border-width: 0.5;");
+    }
+
+    public void setBorderHighlight(Color color) {
+        int r = (int)(color.getRed() * 255);
+        int g = (int)(color.getGreen() * 255);
+        int b = (int)(color.getBlue() * 255);;
+        stack.setStyle("-fx-border-color: " + "rgb(" + r + "," + g + "," + b + ")" + "; -fx-border-width: 3;");
     }
 
     public void setBuilding(Building building){
@@ -99,29 +114,12 @@ public class Tile {
         unitImage.setImage(null);
     }
 
-    public void setHighlighted(boolean value) {
-        if (value) {
-            highlight.setFill(HIGHLIGHT_YELLOW); // transparent yellow
-        } else {
-            highlight.setFill(Color.TRANSPARENT);
-        }
-    }
-
-    public void setGreyedOut(boolean value){
-        if (value) {
-            highlight.setFill(HIGHLIGHT_YELLOW);
-        } else {
-            highlight.setFill(Color.TRANSPARENT);
-        }
+    public void setHighlightColour(Color colour) {
+        highlight.setFill(colour);
     }
 
     public Rectangle getHighlight(){
         return highlight;
-    }
-
-    public boolean isHighlighted(){
-        Color color = (Color) highlight.getFill();
-        return color.equals(HIGHLIGHT_YELLOW);
     }
 
     public TileType getType(){
