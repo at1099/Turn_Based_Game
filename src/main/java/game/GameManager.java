@@ -15,6 +15,7 @@ public class GameManager {
     private Unit selectedUnit;
     private TurnManager turnManager;
     List<Unit> unitsToMove = new ArrayList<>();
+    List<Unit> unitsToAttack = new ArrayList<>();
 
     public GameManager(GameMap currentLevel){
         this.currentLevel = currentLevel;
@@ -46,7 +47,6 @@ public class GameManager {
     }
 
     public Tile findAttackPos(Unit unit, Tile destination){
-        //first test moving left
         int[][] directions = new int[][]{{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
         Tile closestTile = null;
 
@@ -54,11 +54,13 @@ public class GameManager {
         int destinationY = destination.getY();
 
         for(int[] d : directions){
-            if(destinationX + d[0] <= currentLevel.getWidth() && destinationY + d[1] <= currentLevel.getHeight()){
-                Tile currentTile = currentLevel.getTile(destinationX+ d[0], destinationY + d[1]);
+            int nx = destinationX + d[0];
+            int ny = destinationY + d[1];
+            if(nx >= 0 && nx < currentLevel.getWidth() && ny >= 0 && ny < currentLevel.getHeight()){
+                Tile currentTile = currentLevel.getTile(nx, ny);
                 if (closestTile == null){
                     closestTile = currentTile;
-                }else if (unit.getDistance(currentTile) < unit.getDistance(closestTile)) {
+                } else if (unit.getDistance(currentTile) < unit.getDistance(closestTile)) {
                     closestTile = currentTile;
                 }
             }
@@ -68,10 +70,10 @@ public class GameManager {
     }
 
     public void attackUnit(Unit unit, Tile destination){
-        Unit enemy = destination.getUnit();
         unit.setDestination(findAttackPos(unit, destination));
         unit.setState(UnitState.ATTACKING);
-        unitsToMove.add(unit);
+        unit.setEnemyToAttack(destination.getUnit());
+        unitsToAttack.add(unit);
     }
 
     public void highlightSquares(Unit selectedUnit){
@@ -102,9 +104,10 @@ public class GameManager {
         } else {
             if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null){
                 moveUnit(selectedUnit, clickedTile);
-                highlightSquares(selectedUnit);
+                //highlightSquares(selectedUnit);
             }else if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() != selectedUnit.getCurrentTeam()){
                 attackUnit(selectedUnit, clickedTile);
+                //highlightSquares(selectedUnit);
             }
 
             selectedUnit = null;
@@ -125,7 +128,19 @@ public class GameManager {
             unit.setHasMoved(false);
         }
 
+        for (Unit unit : unitsToAttack) { //moves units
+            unit.move();
+            Unit enemy = unit.getEnemyToAttack();
+            enemy.takeDamage(50);
+            unit.setHasAttacked(false);
+            unit.setHasMoved(false);
+            if (enemy.isDead()){
+                currentLevel.removeUnit(enemy);
+            }
+        }
+
         unitsToMove.clear();
+        unitsToAttack.clear();
         turnManager.switchTurn();
     }
 }

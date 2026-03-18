@@ -6,12 +6,15 @@ import game.board.Tile;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 
 public class Unit {
 
     private Tile position;
     private Tile destination;
+    private Unit enemyToAttack;
+    private boolean hasAttacked;
     private boolean hasMoved;
     private String name;
     private PlayerTurn currentTeam;
@@ -25,7 +28,9 @@ public class Unit {
     public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
         this.destination = null;
+        this.enemyToAttack = null;
         this.hasMoved = false;
+        this.hasAttacked = false;
         this.name = name;
         this.currentTeam = currentTeam;
         this.type = type;
@@ -87,8 +92,28 @@ public class Unit {
         return attacks;
     }
 
+    public Unit getEnemyToAttack(){
+        return enemyToAttack;
+    }
+
+    public void setEnemyToAttack(Unit enemyToAttack){
+        this.enemyToAttack = enemyToAttack;
+    }
+
+    public boolean getHasAttacked(){
+        return hasAttacked;
+    }
+
+    public void setHasAttacked(boolean hasAttacked){
+        this.hasAttacked = hasAttacked;
+    }
+
     public int getCurrentHealth() {
         return currentHealth;
+    }
+
+    public boolean isDead(){
+        return currentHealth == 0;
     }
 
     public void takeDamage(int damage) {
@@ -128,8 +153,12 @@ public class Unit {
 
     public void move(){
         position.removeUnit();
+        position.updateHealthBar();
+
         position = destination;
         destination.setUnit(this);
+        destination.updateHealthBar();
+
         state = UnitState.IDLE;
         hasMoved = true;
     }

@@ -1,5 +1,7 @@
 package game.board;
 import game.units.Unit;
+import javafx.geometry.Pos;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
@@ -25,6 +27,7 @@ public class Tile {
     private Unit unit;
     private ImageView unitImage;
     private StackPane stack;
+    private ProgressBar healthBar = new ProgressBar();
 
     public Tile(TileType type, int x, int y) {
         this.type = type;
@@ -46,8 +49,15 @@ public class Tile {
         unitImage.setFitWidth(48);
         unitImage.setFitHeight(48);
 
-        stack = new StackPane(backgroundImage, highlight, buildingImage, unitImage);
-        stack.setStyle("-fx-border-color: black; -fx-border-width: 0.5;"); //creates balck gap
+        healthBar = new ProgressBar(1);
+        healthBar.setPrefWidth(40);
+        healthBar.setMaxWidth(40);
+        healthBar.setStyle("-fx-accent: red;");
+        healthBar.setVisible(false);
+
+        stack = new StackPane(backgroundImage, highlight, buildingImage, unitImage, healthBar);
+        StackPane.setAlignment(healthBar, Pos.TOP_CENTER);
+        stack.setStyle("-fx-border-color: black; -fx-border-width: 0.5;");
     }
 
     public StackPane getNode() {
@@ -136,5 +146,15 @@ public class Tile {
 
     public int getHitChanceChange(){
         return type.getHitChanceChange();
+    }
+
+    public void updateHealthBar() {
+        if (unit != null) {
+            double hp = (double) unit.getCurrentHealth() / unit.getMaxHealth();
+            healthBar.setProgress(hp);
+            healthBar.setVisible(true);
+        } else {
+            healthBar.setVisible(false);
+        }
     }
 }

@@ -31,6 +31,9 @@ public class Main extends Application { //main inherits behaviour from Applicati
     private GameMap gameMap;
     private GameManager gameManager;
 
+    private Label nameLabel;
+    private Label healthText;
+
     private final int TILE_SIZE = 50;
 
     public Button[] sideButtons;
@@ -82,6 +85,19 @@ public class Main extends Application { //main inherits behaviour from Applicati
                 // Handle clicks for selection/movement
                 tile.getNode().setOnMouseClicked(e -> {
                     gameManager.handleTileClick(finalX, finalY);
+
+                    Unit selected = gameMap.getSelectedUnit();
+
+                    if (selected != null) {
+                        nameLabel.setText(selected.getType().toString());
+                        healthText.setText(
+                                selected.getCurrentHealth() + " / " + selected.getMaxHealth()
+                        );
+                    } else {
+                        nameLabel.setText("");
+                        healthText.setText("");
+                    }
+
                     redrawBoard();
                 });
             }
@@ -118,7 +134,11 @@ public class Main extends Application { //main inherits behaviour from Applicati
             sideButtons[i].setStyle("-fx-font-size: 48px;");
             sideButtons[i].setPrefSize(500, 200);
         }
-        VBox sideBar = new VBox();
+        nameLabel = new Label();
+        healthText = new Label();
+
+        VBox sideBar = new VBox(10);
+        sideBar.getChildren().addAll(nameLabel, healthText);
         sideBar.getChildren().addAll(sideButtons);
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setPadding(new Insets(10));
@@ -165,19 +185,27 @@ public class Main extends Application { //main inherits behaviour from Applicati
         for (int x = 0; x < gameMap.getWidth(); x++) {
             for (int y = 0; y < gameMap.getHeight(); y++) {
                 Tile tile = gameMap.getTile(x, y);
+                Unit unit = tile.getUnit();
 
-                if(tile.getUnit() != null) {
-                    tile.setBorderHighlight(tile.getUnit().getCurrentTeam().getColour());
-                    //tile.setHighlightColour(tile.HIGHLIGHT_RED);
-                }else{
-                    //tile.clearBorderHighlight();
+                if (unit != null) {
+                    tile.setBorderHighlight(unit.getCurrentTeam().getColour());
+                    tile.updateHealthBar();
+                } else {
                     tile.setBorderHighlight(Color.TRANSPARENT);
+                    tile.updateHealthBar(); // hides health bar
                 }
             }
         }
 
-        for (Unit unit : gameManager.unitsToMove) { //moves units
-            unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
+        for (Unit unit : gameManager.unitsToMove) {
+            if (unit.getDestination() != null)
+                unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
+        }
+
+        for (Unit unit : gameManager.unitsToAttack) {
+            if (unit.getDestination() != null) {
+                unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
+            }
         }
     }
 }

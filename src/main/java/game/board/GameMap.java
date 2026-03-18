@@ -52,4 +52,11 @@ public class GameMap {
     public void setSelectedUnit(Unit selectedUnit) {
         this.selectedUnit = selectedUnit;
     }
+
+    public void removeUnit(Unit unit) {
+        Tile tile = unit.getPosition();
+        if (tile != null) {
+            tile.removeUnit();
+        }
+    }
 }
