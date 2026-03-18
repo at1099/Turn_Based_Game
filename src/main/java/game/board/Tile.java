@@ -11,8 +11,8 @@ public class Tile {
     public static final Color HIGHLIGHT_YELLOW = Color.color(1,1,0,0.4);
     public static final Color GREYED_OUT = Color.color(0.4, 0.4, 0.4, 0.6); // semi-transparent gray
     public static final Color HIGHLIGHT_BLUE = Color.color(0.2, 0.6, 1.0, 0.4);
-    public static final Color HIGHLIGHT_GREEN = Color.color(0.2, 1, 0.2, 0.4);
-    public static final Color HIGHLIGHT_RED = Color.color(1, 0.3, 0.3, 0.4);
+    public static final Color HIGHLIGHT_GREEN = Color.color(0, 1, 0, 0.7);
+    public static final Color HIGHLIGHT_RED = Color.color(1, 0, 0, 0.7);
 
     private TileType type;
     private int x;

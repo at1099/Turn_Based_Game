@@ -11,6 +11,8 @@ import javafx.scene.image.Image;
 public class Unit {
 
     private Tile position;
+    private Tile destination;
+    private boolean hasMoved;
     private String name;
     private PlayerTurn currentTeam;
 
@@ -22,6 +24,8 @@ public class Unit {
 
     public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
+        this.destination = null;
+        this.hasMoved = false;
         this.name = name;
         this.currentTeam = currentTeam;
         this.type = type;
@@ -67,6 +71,14 @@ public class Unit {
         return position;
     }
 
+    public Tile getDestination(){
+        return destination;
+    }
+
+    public void setDestination(Tile destination){
+        this.destination = destination;
+    }
+
     public void setPosition(Tile position){
         this.position = position;
     }
@@ -93,19 +105,32 @@ public class Unit {
         }
     }
 
+    public int getDistance(Tile destination){
+        return (Math.abs(destination.getX()-position.getX()) + Math.abs(destination.getY()-position.getY()));
+    }
+
     public boolean canMove(Tile tile){
-        int distance = Math.abs(tile.getX()-position.getX()) + Math.abs(tile.getY()-position.getY());
-        return distance < getMoveRadius();
+        int distance = getDistance(tile);
+        return (distance < getMoveRadius() && !hasMoved);
     }
 
     public void attack(Unit target){
         //how can player select an attack?
     }
 
-    public void moveTo(Tile tile){
+    public boolean getHasMoved(){
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean hasMoved){
+        this.hasMoved = hasMoved;
+    }
+
+    public void move(){
         position.removeUnit();
-        position = tile;
-        tile.setUnit(this);
+        position = destination;
+        destination.setUnit(this);
         state = UnitState.IDLE;
+        hasMoved = true;
     }
 }

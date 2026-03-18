@@ -33,6 +33,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
     private final int TILE_SIZE = 50;
 
+    public Button[] sideButtons;
     public static void main(String[] args) {
         launch(args); //starts javafx, creates ui thread and calls start()
     }
@@ -86,9 +87,11 @@ public class Main extends Application { //main inherits behaviour from Applicati
             }
         }
         String turnText = gameManager.getTurnManager().getCurrentTurn().getText();
+        Color turnColour = gameManager.getTurnManager().getCurrentTurn().getColour();
         //label to display whos turn it is
         Label turnLabel = new Label(turnText);
         turnLabel.setFont(new Font(20));
+        turnLabel.setTextFill(turnColour);
         //creates new hbox for it
         HBox topBar = new HBox(turnLabel);
         topBar.setPadding(new Insets(10));
@@ -98,23 +101,35 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
         // create the end turn button
         Button endTurnButton = new Button("End Turn");
-        endTurnButton.setStyle("-fx-font-size: 16px;"); //makes button bigger
+        endTurnButton.setStyle("-fx-font-size: 48px;"); //makes button bigger
         endTurnButton.setOnAction(e -> {
-            gameManager.getTurnManager().switchTurn();
-            String newTurn = gameManager.getTurnManager().getCurrentTurn().getText(); //changes text
-            turnLabel.setText(newTurn);
+            gameManager.switchTurn();
+            String newText = gameManager.getTurnManager().getCurrentTurn().getText(); //changes text
+            Color newColour = gameManager.getTurnManager().getCurrentTurn().getColour();
+            turnLabel.setTextFill(newColour);
+            turnLabel.setText(newText);
             redrawBoard();
         });
 
+        // side buttons
+        sideButtons = new Button[4];
+        for  (int i = 0; i < 4; i++) {
+            sideButtons[i] = new Button("");
+            sideButtons[i].setStyle("-fx-font-size: 48px;");
+            sideButtons[i].setPrefSize(500, 200);
+        }
+        VBox sideBar = new VBox();
+        sideBar.getChildren().addAll(sideButtons);
+        sideBar.setAlignment(Pos.TOP_RIGHT);
+        sideBar.setPadding(new Insets(10));
+
         // container for the bottom buttons
         HBox bottomBar = new HBox(endTurnButton);
+        bottomBar.setAlignment(Pos.BOTTOM_RIGHT); // align button to the right
+        bottomBar.setPadding(new Insets(10));  // add spacing from screen edges
 
-        // align button to the right
-        bottomBar.setAlignment(Pos.BOTTOM_RIGHT);
-
-        // add spacing from screen edges
-        bottomBar.setPadding(new Insets(10));
-
+        //sidebar on the right
+        root.setRight(sideBar);
         //put label in top left
         root.setTop(topBar);
         // put the board in the center
@@ -152,19 +167,17 @@ public class Main extends Application { //main inherits behaviour from Applicati
                 Tile tile = gameMap.getTile(x, y);
 
                 if(tile.getUnit() != null) {
-                    if(tile.getUnit().getCurrentTeam() == PlayerTurn.PLAYER){
-                        tile.setBorderHighlight(tile.HIGHLIGHT_GREEN);
-                        //tile.setHighlightColour(tile.HIGHLIGHT_GREEN);
-                    }else if(tile.getUnit().getCurrentTeam() == PlayerTurn.ENEMY){
-                        tile.setBorderHighlight(tile.HIGHLIGHT_RED);
-                }
+                    tile.setBorderHighlight(tile.getUnit().getCurrentTeam().getColour());
                     //tile.setHighlightColour(tile.HIGHLIGHT_RED);
                 }else{
                     //tile.clearBorderHighlight();
                     tile.setBorderHighlight(Color.TRANSPARENT);
                 }
-
             }
+        }
+
+        for (Unit unit : gameManager.unitsToMove) { //moves units
+            unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
         }
     }
 }
