@@ -7,13 +7,11 @@ public class GameMap {
     private int width;
     private int height;
     private Tile[][] tileGrid;
-    private Unit selectedUnit;
 
     public GameMap(int width, int height){
         this.width = width;
         this.height = height;
         this.tileGrid = new Tile[width][height];
-        this.selectedUnit = null;
 
         // initialize all tiles as grass by default
         for(int x = 0; x < width; x++){
@@ -43,14 +41,6 @@ public class GameMap {
         Tile tile = tileGrid[x][y];
         tile.setUnit(unit);
         unit.setPosition(tile);
-    }
-
-    public Unit getSelectedUnit() {
-        return selectedUnit;
-    }
-
-    public void setSelectedUnit(Unit selectedUnit) {
-        this.selectedUnit = selectedUnit;
     }
 
     public void removeUnit(Unit unit) {

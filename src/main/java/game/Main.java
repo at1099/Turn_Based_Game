@@ -4,9 +4,7 @@ import game.board.Building;
 import game.board.BuildingType;
 import game.board.GameMap;
 import game.board.Tile;
-import game.units.Unit;
-import game.units.UnitState;
-import game.units.UnitType;
+import game.units.*;
 
 import javafx.application.Application;
 import javafx.scene.paint.Color;
@@ -24,6 +22,8 @@ import javafx.scene.layout.HBox;
 import javafx.geometry.Insets;
 
 import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Main extends Application { //main inherits behaviour from Application
 
@@ -40,6 +40,9 @@ public class Main extends Application { //main inherits behaviour from Applicati
     public static void main(String[] args) {
         launch(args); //starts javafx, creates ui thread and calls start()
     }
+
+    List<Unit> units = new ArrayList<>();
+
 
     @Override
     //runs the main menu
@@ -62,6 +65,53 @@ public class Main extends Application { //main inherits behaviour from Applicati
         window.show(); //shows scene
     }
 
+    private void createUnit(int x, int y, String name, PlayerTurn playerTurn, UnitType type) {
+        /*switch (type){
+            case KING:
+                Tile knightTile = gameMap.getTile(x, y);
+                Unit knight = new Unit(knightTile, "Knight", playerTurn, type, UnitState.IDLE);
+                knightTile.setUnit(knight);
+                units.add(knight);
+                break;
+            case LIGHT_SOLDIER:
+                Tile kingTile = gameMap.getTile(x, y);
+                Unit king = new Unit(kingTile, "Knight", playerTurn, type, UnitState.IDLE);
+                kingTile.setUnit(king);
+                units.add(king);
+                break;
+            case LIGHT_ARCHER:
+                Tile archerTile = gameMap.getTile(x, y);
+                Unit archer = new Unit(archerTile, "Archer", PlayerTurn.ENEMY, type, UnitState.IDLE);
+                archerTile.setUnit(archer);
+                units.add(archer);
+                break;
+        }*/
+
+        Tile tile = gameMap.getTile(x,y);
+        Unit unit = new Unit(tile, name, playerTurn, type, UnitState.IDLE);
+        tile.setUnit(unit);
+        units.add(unit);
+
+    }
+
+    private void createBuilding(int x, int y, BuildingType type) {
+        /* switch(type){
+            case CASTLE:
+                Tile castleTile = gameMap.getTile(x, y);
+                Building castle = new Building(type, castleTile);
+                castleTile.setBuilding(castle);
+                break;
+            case VILLAGE:
+                Tile villageTile = gameMap.getTile(x, y);
+                Building village = new Building(type, villageTile);
+                villageTile.setBuilding(village);
+        } */
+
+        Tile tile = gameMap.getTile(x, y);
+        Building building = new Building(type, tile);
+        tile.setBuilding(building);
+    }
+
     private Scene createGameScene() {
 
         int width = 10;
@@ -69,39 +119,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
         gameMap = new GameMap(width, height);
         gameManager = new GameManager(gameMap);
 
-        GridPane mapGrid = new GridPane();
 
-        // Create tiles and add to GridPane ---
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                Tile tile = gameMap.getTile(x, y); // already created in GameMap
-
-                // Add the StackPane from Tile to GridPane
-                mapGrid.add(tile.getNode(), x, y);
-
-                int finalX = x;
-                int finalY = y;
-
-                // Handle clicks for selection/movement
-                tile.getNode().setOnMouseClicked(e -> {
-                    gameManager.handleTileClick(finalX, finalY);
-
-                    Unit selected = gameMap.getSelectedUnit();
-
-                    if (selected != null) {
-                        nameLabel.setText(selected.getType().toString());
-                        healthText.setText(
-                                selected.getCurrentHealth() + " / " + selected.getMaxHealth()
-                        );
-                    } else {
-                        nameLabel.setText("");
-                        healthText.setText("");
-                    }
-
-                    redrawBoard();
-                });
-            }
-        }
         String turnText = gameManager.getTurnManager().getCurrentTurn().getText();
         Color turnColour = gameManager.getTurnManager().getCurrentTurn().getColour();
         //label to display whos turn it is
@@ -129,7 +147,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
         // side buttons
         sideButtons = new Button[4];
-        for  (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             sideButtons[i] = new Button("");
             sideButtons[i].setStyle("-fx-font-size: 48px;");
             sideButtons[i].setPrefSize(500, 200);
@@ -148,6 +166,60 @@ public class Main extends Application { //main inherits behaviour from Applicati
         bottomBar.setAlignment(Pos.BOTTOM_RIGHT); // align button to the right
         bottomBar.setPadding(new Insets(10));  // add spacing from screen edges
 
+        GridPane mapGrid = new GridPane();
+
+        // Create tiles and add to GridPane ---
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Tile tile = gameMap.getTile(x, y); // already created in GameMap
+
+                // Add the StackPane from Tile to GridPane
+                mapGrid.add(tile.getNode(), x, y);
+
+                int finalX = x;
+                int finalY = y;
+
+                // Handle clicks for selection/movement
+                tile.getNode().setOnMouseClicked(e -> {
+                    gameManager.handleTileClick(finalX, finalY);
+                    Unit selected = gameManager.getSelectedUnit();
+
+                    for (int i = 0; i < sideButtons.length; i++) {
+                        sideButtons[i].setText(null);
+                        sideButtons[i].setOnMouseClicked(null);
+                    }
+
+                    if (selected != null && selected.getState() == UnitState.READY_TO_ATTACK) {
+
+                        List<AttackType> attacks = selected.getAttacks();
+
+                        for (int i = 0; i < attacks.size(); i++) {
+                            int index = i;
+
+                            sideButtons[index].setText(attacks.get(index).toString());
+                            sideButtons[index].setOnMouseClicked(event -> {
+                                gameManager.handleAttackClick(attacks.get(index));
+                                redrawBoard();
+                            }); //e renamed to event to not use twice
+                        }
+                    }
+
+                    //change text
+                    if (selected != null) {
+                        nameLabel.setText(selected.getType().toString());
+                        healthText.setText(
+                                selected.getCurrentHealth() + " / " + selected.getMaxHealth()
+                        );
+                    } else {
+                        nameLabel.setText("");
+                        healthText.setText("");
+                    }
+
+                    redrawBoard();
+                });
+            }
+        }
+
         //sidebar on the right
         root.setRight(sideBar);
         //put label in top left
@@ -157,25 +229,16 @@ public class Main extends Application { //main inherits behaviour from Applicati
         // put the button bar at the bottom
         root.setBottom(bottomBar);
 
-        // Place static buildings (set once, no redraw needed)
-        Tile castleTile = gameMap.getTile(3, 3);
-        Building castle = new Building(BuildingType.CASTLE, castleTile);
-        castleTile.setBuilding(castle);
 
-        Tile villageTile = gameMap.getTile(6, 2);
-        Building village = new Building(BuildingType.VILLAGE, villageTile);
-        villageTile.setBuilding(village);
+        // Place static buildings (set once, no redraw needed)
+        createBuilding(3,3, BuildingType.CASTLE);
+        createBuilding(6,7, BuildingType.VILLAGE);
 
         //Place units
-        Tile knightTile = gameMap.getTile(1, 1);
-        Unit knight = new Unit(knightTile, "Knight", PlayerTurn.PLAYER, UnitType.LIGHT_SOLDIER, UnitState.IDLE);
-        knightTile.setUnit(knight);
+        createUnit(1,1 , "Knight", PlayerTurn.PLAYER, UnitType.LIGHT_SOLDIER);
+        createUnit(4,4, "Archer", PlayerTurn.ENEMY, UnitType.LIGHT_ARCHER);
 
-        Tile archerTile = gameMap.getTile(2, 1);
-        Unit archer = new Unit(archerTile, "Archer", PlayerTurn.ENEMY, UnitType.LIGHT_ARCHER, UnitState.IDLE);
-        archerTile.setUnit(archer);
-
-        // Initial redraw (highlights/units) ---
+        // Initial draw (highlights/units)
         redrawBoard();
 
         return new Scene(root, width * TILE_SIZE, height * TILE_SIZE + 40);
@@ -190,6 +253,11 @@ public class Main extends Application { //main inherits behaviour from Applicati
                 if (unit != null) {
                     tile.setBorderHighlight(unit.getCurrentTeam().getColour());
                     tile.updateHealthBar();
+
+                    if (unit.getState() == UnitState.READY_TO_ATTACK){
+                        unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
+                    }
+
                 } else {
                     tile.setBorderHighlight(Color.TRANSPARENT);
                     tile.updateHealthBar(); // hides health bar
@@ -198,12 +266,13 @@ public class Main extends Application { //main inherits behaviour from Applicati
         }
 
         for (Unit unit : gameManager.unitsToMove) {
-            if (unit.getDestination() != null)
+            if (unit.getDestination() != null) {
                 unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
+            }
         }
 
-        for (Unit unit : gameManager.unitsToAttack) {
-            if (unit.getDestination() != null) {
+        for (Unit unit: gameManager.unitsToAttack){
+            if (unit.getDestination() != null){
                 unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
             }
         }

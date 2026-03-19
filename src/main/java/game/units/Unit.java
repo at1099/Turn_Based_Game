@@ -25,6 +25,8 @@ public class Unit {
     private int currentHealth;
     private List<AttackType> attacks;
 
+    private AttackType attackedBy;
+
     public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
         this.destination = null;
@@ -38,6 +40,8 @@ public class Unit {
 
         this.currentHealth = type.getMaxHealth();
         this.attacks = new ArrayList<>(type.getAttacks());
+
+        this.attackedBy = null;
     }
 
     public PlayerTurn getCurrentTeam(){
@@ -92,6 +96,14 @@ public class Unit {
         return attacks;
     }
 
+    public AttackType getAttackedBy(){
+        return attackedBy;
+    }
+
+    public void setAttackedBy(AttackType attackedBy){
+        this.attackedBy = attackedBy;
+    }
+
     public Unit getEnemyToAttack(){
         return enemyToAttack;
     }
@@ -116,11 +128,12 @@ public class Unit {
         return currentHealth == 0;
     }
 
-    public void takeDamage(int damage) {
-        currentHealth -= damage;
+    public void takeDamage() {
+        currentHealth -= attackedBy.getDamage();
         if (currentHealth < 0) {
             currentHealth = 0;
         }
+        attackedBy = null;
     }
 
     public void heal(int amount) {

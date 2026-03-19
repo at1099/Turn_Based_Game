@@ -23,6 +23,14 @@ public class GameManager {
         turnManager = new TurnManager(PlayerTurn.PLAYER);
     }
 
+    public Unit getSelectedUnit() {
+        return selectedUnit;
+    }
+
+    public void setSelectedUnit(Unit selectedUnit) {
+        this.selectedUnit = selectedUnit;
+    }
+
     public TurnManager getTurnManager(){
         return turnManager;
     }
@@ -44,6 +52,15 @@ public class GameManager {
         unit.setDestination(destination);
         unit.setState(UnitState.MOVING);
         unitsToMove.add(unit);
+
+        if(unit.getEnemyToAttack() != null){
+            unit.getEnemyToAttack().setAttackedBy(null);
+            unit.setEnemyToAttack(null);
+        }
+        unitsToAttack.remove(unit);
+
+        selectedUnit = null;
+        clearHighlights();
     }
 
     public Tile findAttackPos(Unit unit, Tile destination){
@@ -69,11 +86,11 @@ public class GameManager {
         return closestTile;
     }
 
-    public void attackUnit(Unit unit, Tile destination){
+    public void moveAttackingUnit(Unit unit, Tile destination){
         unit.setDestination(findAttackPos(unit, destination));
-        unit.setState(UnitState.ATTACKING);
+        unit.setState(UnitState.READY_TO_ATTACK);
         unit.setEnemyToAttack(destination.getUnit());
-        unitsToAttack.add(unit);
+        unitsToMove.remove(unit);
     }
 
     public void highlightSquares(Unit selectedUnit){
@@ -91,14 +108,31 @@ public class GameManager {
         }
     }
 
+    public void handleAttackClick(AttackType attack){
+        if (selectedUnit != null && selectedUnit.getState() == UnitState.READY_TO_ATTACK){
+            Unit enemy = selectedUnit.getEnemyToAttack();
+            enemy.setAttackedBy(attack);
+
+            unitsToAttack.add(selectedUnit);
+            selectedUnit.setState(UnitState.ATTACKING);
+
+            selectedUnit = null;
+            clearHighlights();
+            System.out.println("Attack clicked: " + attack);
+            System.out.println("Attacking unit: " + selectedUnit);
+        }
+    }
+
     public void handleTileClick(int x, int y){
         Tile clickedTile = currentLevel.getTile(x, y);
 
         if(selectedUnit == null){
             if(clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && !clickedTile.getUnit().getHasMoved()){
                 selectedUnit = clickedTile.getUnit();
+                selectedUnit.setDestination(null);
+                clearHighlights();
                 clickedTile.setHighlightColour(clickedTile.HIGHLIGHT_GREEN);
-                currentLevel.setSelectedUnit(selectedUnit);
+                setSelectedUnit(selectedUnit);
                 highlightSquares(selectedUnit);
             }
         } else {
@@ -106,12 +140,9 @@ public class GameManager {
                 moveUnit(selectedUnit, clickedTile);
                 //highlightSquares(selectedUnit);
             }else if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() != selectedUnit.getCurrentTeam()){
-                attackUnit(selectedUnit, clickedTile);
+                moveAttackingUnit(selectedUnit, clickedTile);
                 //highlightSquares(selectedUnit);
             }
-
-            selectedUnit = null;
-            clearHighlights();
         }
     }
 
@@ -126,21 +157,28 @@ public class GameManager {
         for (Unit unit : unitsToMove) { //moves units
             unit.move();
             unit.setHasMoved(false);
+            unit.setState(UnitState.IDLE);
         }
 
         for (Unit unit : unitsToAttack) { //moves units
+            //if (unit.getEnemyToAttack() == null || unit.getAttackedBy() == null) continue;
             unit.move();
             Unit enemy = unit.getEnemyToAttack();
-            enemy.takeDamage(50);
+            enemy.takeDamage();
+            enemy.setAttackedBy(null);
+
+            unit.setState(UnitState.IDLE);
             unit.setHasAttacked(false);
             unit.setHasMoved(false);
-            if (enemy.isDead()){
-                currentLevel.removeUnit(enemy);
+            if (unit.getEnemyToAttack().isDead()){
+                currentLevel.removeUnit(unit.getEnemyToAttack());
             }
         }
-
+        System.out.println("Units to attack: " + unitsToAttack.size());
+        selectedUnit = null;
         unitsToMove.clear();
         unitsToAttack.clear();
+        clearHighlights();
         turnManager.switchTurn();
     }
 }
