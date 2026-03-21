@@ -10,6 +10,8 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.System.out;
+
 public class GameManager {
     private GameMap currentLevel;
     private Unit selectedUnit;
@@ -118,8 +120,8 @@ public class GameManager {
 
             selectedUnit = null;
             clearHighlights();
-            System.out.println("Attack clicked: " + attack);
-            System.out.println("Attacking unit: " + selectedUnit);
+            out.println("Attack clicked: " + attack);
+            out.println("Attacking unit: " + selectedUnit);
         }
     }
 
@@ -127,13 +129,27 @@ public class GameManager {
         Tile clickedTile = currentLevel.getTile(x, y);
 
         if(selectedUnit == null){
-            if(clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && !clickedTile.getUnit().getHasMoved()){
+
+            if(clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() == UnitState.IDLE){
+                System.out.println("Hello");
                 selectedUnit = clickedTile.getUnit();
                 selectedUnit.setDestination(null);
                 clearHighlights();
                 clickedTile.setHighlightColour(clickedTile.HIGHLIGHT_GREEN);
                 setSelectedUnit(selectedUnit);
                 highlightSquares(selectedUnit);
+            } else if(clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() !=  UnitState.IDLE){
+                selectedUnit = null;
+                Unit unit = clickedTile.getUnit();
+                unit.setDestination(null);
+                unit.setState(UnitState.IDLE);
+                if (unitsToMove.contains(unit)){
+                    unitsToMove.remove(unit);
+                }
+                if(unitsToAttack.contains(unit)){
+                    unitsToAttack.remove(unit);
+                }
+                clearHighlights();
             }
         } else {
             if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null){
@@ -174,7 +190,11 @@ public class GameManager {
                 currentLevel.removeUnit(unit.getEnemyToAttack());
             }
         }
-        System.out.println("Units to attack: " + unitsToAttack.size());
+        out.println("Units to attack: " + unitsToAttack.size());
+        if (selectedUnit != null) {
+            System.out.println("Hi");
+            selectedUnit.setDestination(null);
+        }
         selectedUnit = null;
         unitsToMove.clear();
         unitsToAttack.clear();

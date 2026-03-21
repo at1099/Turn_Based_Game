@@ -137,6 +137,10 @@ public class Main extends Application { //main inherits behaviour from Applicati
         Button endTurnButton = new Button("End Turn");
         endTurnButton.setStyle("-fx-font-size: 48px;"); //makes button bigger
         endTurnButton.setOnAction(e -> {
+            for (int j = 0; j < sideButtons.length; j++) {
+                sideButtons[j].setText(null);
+                sideButtons[j].setOnMouseClicked(null);
+            }
             gameManager.switchTurn();
             String newText = gameManager.getTurnManager().getCurrentTurn().getText(); //changes text
             Color newColour = gameManager.getTurnManager().getCurrentTurn().getColour();
@@ -198,6 +202,10 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
                             sideButtons[index].setText(attacks.get(index).toString());
                             sideButtons[index].setOnMouseClicked(event -> {
+                                for (int j = 0; j < sideButtons.length; j++) {
+                                    sideButtons[j].setText(null);
+                                    sideButtons[j].setOnMouseClicked(null);
+                                }
                                 gameManager.handleAttackClick(attacks.get(index));
                                 redrawBoard();
                             }); //e renamed to event to not use twice
@@ -254,7 +262,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                     tile.setBorderHighlight(unit.getCurrentTeam().getColour());
                     tile.updateHealthBar();
 
-                    if (unit.getState() == UnitState.READY_TO_ATTACK){
+                    if (unit.getState() == UnitState.READY_TO_ATTACK && unit.getDestination() != null) {
                         unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
                     }
 
