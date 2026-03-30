@@ -1,10 +1,13 @@
 package game;
 
+import game.board.Building;
+import game.board.BuildingType;
 import game.board.GameMap;
 import game.board.Tile;
 import game.units.AttackType;
 import game.units.Unit;
 import game.units.UnitState;
+import game.units.UnitType;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
@@ -18,12 +21,22 @@ public class GameManager {
     private TurnManager turnManager;
     List<Unit> unitsToMove = new ArrayList<>();
     List<Unit> unitsToAttack = new ArrayList<>();
+    List<Unit> unitsToSummon = new ArrayList<>();
 
     public GameManager(GameMap currentLevel){
         this.currentLevel = currentLevel;
         selectedUnit = null;
         turnManager = new TurnManager(PlayerTurn.PLAYER);
     }
+
+    public void resetUnit(){
+        if (selectedUnit != null){
+            selectedUnit.resetUnit();
+            selectedUnit = null;
+        }
+        clearHighlights();
+    }
+
 
     public Unit getSelectedUnit() {
         return selectedUnit;
@@ -48,6 +61,12 @@ public class GameManager {
                 currentLevel.getTile(x,y).setHighlightColour(Color.TRANSPARENT);
             }
         }
+    }
+
+    public void selectSummonLocation(Tile tile){
+        selectedUnit.setState(UnitState.READY_TO_SUMMON);
+        tile.setHighlightColour(selectedUnit.getCurrentTeam().getColour());
+        selectedUnit.setDestination(tile);
     }
 
     public void moveUnit(Unit unit, Tile destination){
@@ -95,7 +114,7 @@ public class GameManager {
         unitsToMove.remove(unit);
     }
 
-    public void highlightSquares(Unit selectedUnit){
+    public void highlightMoveSquares(Unit selectedUnit){
         for(int x = 0; x < currentLevel.getWidth(); x++) {
             for (int y = 0; y < currentLevel.getHeight(); y++) {
                 Tile currentTile = currentLevel.getTile(x,y);
@@ -107,6 +126,34 @@ public class GameManager {
                     }
                 }
             }
+        }
+    }
+
+    public void highlightSummonSquares(Unit selectedUnit){
+        for(int x = 0; x < currentLevel.getWidth(); x++) {
+            for (int y = 0; y < currentLevel.getHeight(); y++) {
+                Tile currentTile = currentLevel.getTile(x,y);
+                if (!selectedUnit.canSummonIn(currentTile)){
+                    currentTile.setHighlightColour(currentTile.GREYED_OUT);
+                }
+            }
+        }
+    }
+
+    public void handleSummonButtonClick(){
+        highlightSummonSquares(selectedUnit);
+        selectedUnit.setState(UnitState.SELECTING_SUMMON_LOC);
+        selectedUnit.setCanCurrentlySummon(false);
+    }
+
+    public void handleSummonClick(UnitType unit){
+        if (selectedUnit != null){
+            Unit newUnit = new Unit(selectedUnit.getDestination(), "Summoned Unit", selectedUnit.getCurrentTeam(), unit, UnitState.IDLE);
+            unitsToSummon.add(newUnit);
+
+            selectedUnit = null;
+            clearHighlights();
+            out.println("Summoning unit: " + newUnit);
         }
     }
 
@@ -125,39 +172,53 @@ public class GameManager {
         }
     }
 
-    public void handleTileClick(int x, int y){
+    public void handleTileClick(int x, int y) {
         Tile clickedTile = currentLevel.getTile(x, y);
 
-        if(selectedUnit == null){
-
-            if(clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() == UnitState.IDLE){
-                System.out.println("Hello");
+        if (selectedUnit == null) {
+            //if an idle unit is selected
+            if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() == UnitState.IDLE) {
                 selectedUnit = clickedTile.getUnit();
+
+                if (clickedTile.getBuilding() != null && clickedTile.getBuilding().getType() == BuildingType.CASTLE) {
+                    selectedUnit.setCanCurrentlySummon(true);
+                }
+
                 selectedUnit.setDestination(null);
                 clearHighlights();
                 clickedTile.setHighlightColour(clickedTile.HIGHLIGHT_GREEN);
                 setSelectedUnit(selectedUnit);
-                highlightSquares(selectedUnit);
-            } else if(clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() !=  UnitState.IDLE){
+                highlightMoveSquares(selectedUnit);
+            //if a unit not in idle is selected (resets)
+            } else if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() != UnitState.IDLE) {
                 selectedUnit = null;
                 Unit unit = clickedTile.getUnit();
                 unit.setDestination(null);
                 unit.setState(UnitState.IDLE);
-                if (unitsToMove.contains(unit)){
+                if (unitsToMove.contains(unit)) {
                     unitsToMove.remove(unit);
                 }
-                if(unitsToAttack.contains(unit)){
+                if (unitsToAttack.contains(unit)) {
                     unitsToAttack.remove(unit);
                 }
                 clearHighlights();
             }
+        //if unit is already selected
         } else {
-            if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null){
+            //if a unit on the same team is selected (resets)
+            if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn()) {
+                selectedUnit.resetUnit();
+                selectedUnit = null;
+                clearHighlights();
+            //if an empty square is picked (and unit not about to summon)
+            } else if (selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null && selectedUnit.getState() != UnitState.SELECTING_SUMMON_LOC) {
                 moveUnit(selectedUnit, clickedTile);
-                //highlightSquares(selectedUnit);
-            }else if(selectedUnit.canMove(clickedTile) && clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() != selectedUnit.getCurrentTeam()){
+            //if enemy unit is selected to attack
+            } else if (selectedUnit.canMove(clickedTile) && clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() != selectedUnit.getCurrentTeam()) {
                 moveAttackingUnit(selectedUnit, clickedTile);
-                //highlightSquares(selectedUnit);
+            //if the user is selecting a location to summon an ally
+            } else if (clickedTile.getUnit() == null && selectedUnit != null && selectedUnit.getState() == UnitState.SELECTING_SUMMON_LOC) {
+                selectSummonLocation(clickedTile);
             }
         }
     }
@@ -172,8 +233,7 @@ public class GameManager {
 
         for (Unit unit : unitsToMove) { //moves units
             unit.move();
-            unit.setHasMoved(false);
-            unit.setState(UnitState.IDLE);
+            unit.resetUnit();
         }
 
         for (Unit unit : unitsToAttack) { //moves units
@@ -183,22 +243,21 @@ public class GameManager {
             enemy.takeDamage();
             enemy.setAttackedBy(null);
 
-            unit.setState(UnitState.IDLE);
-            unit.setHasAttacked(false);
-            unit.setHasMoved(false);
-            if (unit.getEnemyToAttack().isDead()){
-                currentLevel.removeUnit(unit.getEnemyToAttack());
+            unit.resetUnit();
+            if (enemy.isDead()){
+                currentLevel.removeUnit(enemy);
             }
         }
-        out.println("Units to attack: " + unitsToAttack.size());
-        if (selectedUnit != null) {
-            System.out.println("Hi");
-            selectedUnit.setDestination(null);
+
+        for (Unit unit : unitsToSummon){
+            currentLevel.placeUnit(unit, unit.getPosition().getX(), unit.getPosition().getY());
         }
-        selectedUnit = null;
+
         unitsToMove.clear();
         unitsToAttack.clear();
-        clearHighlights();
+        unitsToSummon.clear();
         turnManager.switchTurn();
+        resetUnit();
+
     }
 }

@@ -37,6 +37,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
     private final int TILE_SIZE = 50;
 
     public Button[] sideButtons;
+    public Button summonButton;
     public static void main(String[] args) {
         launch(args); //starts javafx, creates ui thread and calls start()
     }
@@ -51,7 +52,10 @@ public class Main extends Application { //main inherits behaviour from Applicati
         window.setTitle("Fantasy Strategy Game"); //name
 
         Label title = new Label("Fantasy Strategy Game"); //creates text on screen
+        title.setFont(new Font(50));
         Button startButton = new Button("Start Game"); //start game button
+        startButton.setPrefSize(400, 150);
+        startButton.setFont(new Font(40));
 
         startButton.setOnAction(e -> window.setScene(createGameScene())); //tells program to run showGameScene when button is clicked
 
@@ -136,6 +140,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
         // create the end turn button
         Button endTurnButton = new Button("End Turn");
         endTurnButton.setStyle("-fx-font-size: 48px;"); //makes button bigger
+        endTurnButton.setPrefSize(300, 100);
         endTurnButton.setOnAction(e -> {
             for (int j = 0; j < sideButtons.length; j++) {
                 sideButtons[j].setText(null);
@@ -149,15 +154,21 @@ public class Main extends Application { //main inherits behaviour from Applicati
             redrawBoard();
         });
 
+        summonButton = new Button("");
+        summonButton.setStyle("-fx-font-size: 48px;");
+        summonButton.setPrefSize(300, 100);
+
         // side buttons
         sideButtons = new Button[4];
         for (int i = 0; i < 4; i++) {
             sideButtons[i] = new Button("");
             sideButtons[i].setStyle("-fx-font-size: 48px;");
-            sideButtons[i].setPrefSize(500, 200);
+            sideButtons[i].setPrefSize(500, 150);
         }
         nameLabel = new Label();
         healthText = new Label();
+        nameLabel.setFont(new Font(30));
+        healthText.setFont(new Font(30));
 
         VBox sideBar = new VBox(10);
         sideBar.getChildren().addAll(nameLabel, healthText);
@@ -166,9 +177,10 @@ public class Main extends Application { //main inherits behaviour from Applicati
         sideBar.setPadding(new Insets(10));
 
         // container for the bottom buttons
-        HBox bottomBar = new HBox(endTurnButton);
+        HBox bottomBar = new HBox(summonButton, endTurnButton);
         bottomBar.setAlignment(Pos.BOTTOM_RIGHT); // align button to the right
         bottomBar.setPadding(new Insets(10));  // add spacing from screen edges
+        bottomBar.setSpacing(10);
 
         GridPane mapGrid = new GridPane();
 
@@ -212,6 +224,33 @@ public class Main extends Application { //main inherits behaviour from Applicati
                         }
                     }
 
+                    if (selected != null && selected.getCanCurrentlySummon()) {
+                        summonButton.setText("Summon");
+                        summonButton.setOnMouseClicked(event -> {
+                            gameManager.handleSummonButtonClick();
+                        });
+                    } else{
+                        summonButton.setText("");
+                        summonButton.setOnMouseClicked(null);
+                    }
+
+                    if (selected != null && selected.getState() == UnitState.READY_TO_SUMMON) {
+                        List<UnitType> summonableUnits = selected.getType().getSummonableUnits();
+
+                        for (int i = 0; i < summonableUnits.size(); i++) {
+                            int index = i;
+                            sideButtons[index].setText(summonableUnits.get(index).toString());
+                            sideButtons[index].setOnMouseClicked(event -> {
+                                for  (int j = 0; j < sideButtons.length; j++) {
+                                    sideButtons[j].setText(null);
+                                    sideButtons[j].setOnMouseClicked(null);
+                                }
+                                gameManager.handleSummonClick(summonableUnits.get(index));
+                                redrawBoard();
+                            });
+                        }
+                    }
+
                     //change text
                     if (selected != null) {
                         nameLabel.setText(selected.getType().toString());
@@ -243,6 +282,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
         createBuilding(6,7, BuildingType.VILLAGE);
 
         //Place units
+        createUnit(3,2, "Knight", PlayerTurn.PLAYER, UnitType.KING);
         createUnit(1,1 , "Knight", PlayerTurn.PLAYER, UnitType.LIGHT_SOLDIER);
         createUnit(4,4, "Archer", PlayerTurn.ENEMY, UnitType.LIGHT_ARCHER);
 
@@ -283,6 +323,10 @@ public class Main extends Application { //main inherits behaviour from Applicati
             if (unit.getDestination() != null){
                 unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
             }
+        }
+
+        for (Unit unit: gameManager.unitsToSummon){
+            unit.getPosition().setHighlightColour(unit.getCurrentTeam().getColour());
         }
     }
 }

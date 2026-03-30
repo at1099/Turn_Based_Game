@@ -11,6 +11,7 @@ public enum UnitType {
             5,
             false,
             List.of(AttackType.SHORT_SWORD, AttackType.LONG_SWORD, AttackType.CROSSBOW),
+            null,
             Assets.KNIGHT
     ),
 
@@ -19,6 +20,7 @@ public enum UnitType {
             7,
             false,
             List.of(AttackType.SHORT_SWORD, AttackType.CROSSBOW, AttackType.LONGBOW),
+            null,
             Assets.ARCHER
     ),
 
@@ -27,6 +29,7 @@ public enum UnitType {
             10,
             true,
             List.of(AttackType.SHORT_SWORD, AttackType.CROSSBOW, AttackType.LONGBOW, AttackType.EXCALIBUR),
+            List.of(LIGHT_ARCHER, LIGHT_SOLDIER),
             Assets.KING
     );
 
@@ -34,13 +37,15 @@ public enum UnitType {
     private final int moveRadius;
     private final boolean canSummon;
     private final List<AttackType> attacks;
+    private final List<UnitType> summonableUnits;
     private Image image;
 
-    UnitType(int maxHealth, int moveRadius, boolean canSummon, List<AttackType> attacks, Image image) {
+    UnitType(int maxHealth, int moveRadius, boolean canSummon, List<AttackType> attacks, List<UnitType> summonableUnits, Image image) {
         this.maxHealth = maxHealth;
         this.moveRadius = moveRadius;
         this.canSummon = canSummon;
         this.attacks = attacks;
+        this.summonableUnits = summonableUnits;
         this.image = image;
 
     }
@@ -60,6 +65,8 @@ public enum UnitType {
     public List<AttackType> getAttacks() {
         return attacks;
     }
+
+    public List<UnitType> getSummonableUnits() {return summonableUnits;}
 
     public Image getImage() {
         return image;

@@ -16,14 +16,18 @@ public class Unit {
     private Unit enemyToAttack;
     private boolean hasAttacked;
     private boolean hasMoved;
+    private boolean hasSummoned;
     private String name;
     private PlayerTurn currentTeam;
 
     private UnitType type;
     private UnitState state;
 
+    private boolean canCurrentlySummon;
+
     private int currentHealth;
     private List<AttackType> attacks;
+    private List<UnitType> summonableUnits;
 
     private AttackType attackedBy;
 
@@ -33,16 +37,32 @@ public class Unit {
         this.enemyToAttack = null;
         this.hasMoved = false;
         this.hasAttacked = false;
+        this.hasSummoned = false;
         this.name = name;
         this.currentTeam = currentTeam;
         this.type = type;
         this.state = state;
+        this.canCurrentlySummon = false;
 
         this.currentHealth = type.getMaxHealth();
         this.attacks = new ArrayList<>(type.getAttacks());
 
         this.attackedBy = null;
     }
+
+    public void resetUnit(){
+        this.hasMoved = false;
+        this.hasAttacked = false;
+        this.destination =  null;
+        this.state = UnitState.IDLE;
+        this.attackedBy = null;
+        this.enemyToAttack = null;
+        this.hasSummoned = false;
+    }
+
+    public boolean getCanCurrentlySummon() {return canCurrentlySummon;}
+
+    public void setCanCurrentlySummon(boolean canCurrentlySummon) {this.canCurrentlySummon = canCurrentlySummon;}
 
     public PlayerTurn getCurrentTeam(){
         return currentTeam;
@@ -59,6 +79,10 @@ public class Unit {
     public boolean canSummon() {
         return type.canSummon();
     }
+
+    public boolean getHasSummoned(){return hasSummoned;}
+
+    public void setHasSummoned(boolean hasSummoned){this.hasSummoned = hasSummoned;}
 
     public int getMaxHealth() {
         return type.getMaxHealth();
@@ -150,6 +174,11 @@ public class Unit {
     public boolean canMove(Tile tile){
         int distance = getDistance(tile);
         return (distance < getMoveRadius() && !hasMoved);
+    }
+
+    public boolean canSummonIn(Tile tile){
+        int distance = getDistance(tile);
+        return(distance < 2 && !hasSummoned);
     }
 
     public void attack(Unit target){
