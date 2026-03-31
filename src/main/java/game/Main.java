@@ -33,6 +33,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
     private Label nameLabel;
     private Label healthText;
+    private Label instructionsLabel;
 
     private final int TILE_SIZE = 50;
 
@@ -128,11 +129,17 @@ public class Main extends Application { //main inherits behaviour from Applicati
         Color turnColour = gameManager.getTurnManager().getCurrentTurn().getColour();
         //label to display whos turn it is
         Label turnLabel = new Label(turnText);
-        turnLabel.setFont(new Font(20));
+        turnLabel.setFont(new Font(30));
         turnLabel.setTextFill(turnColour);
+
+        //instruction label
+        instructionsLabel = new Label("Select a unit or end turn");
+        instructionsLabel.setFont(new Font(30));
+
         //creates new hbox for it
-        HBox topBar = new HBox(turnLabel);
+        HBox topBar = new HBox(turnLabel, instructionsLabel);
         topBar.setPadding(new Insets(10));
+        topBar.setSpacing(10);
 
         BorderPane root = new BorderPane(); //layout that divides the screen into 5 regions
                                             //called root because it is the highest level layout that stores other layouts inside it
@@ -147,10 +154,12 @@ public class Main extends Application { //main inherits behaviour from Applicati
                 sideButtons[j].setOnMouseClicked(null);
             }
             gameManager.switchTurn();
+
             String newText = gameManager.getTurnManager().getCurrentTurn().getText(); //changes text
             Color newColour = gameManager.getTurnManager().getCurrentTurn().getColour();
             turnLabel.setTextFill(newColour);
             turnLabel.setText(newText);
+            instructionsLabel.setText("Select a unit or end turn");
             redrawBoard();
         });
 
@@ -197,7 +206,8 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
                 // Handle clicks for selection/movement
                 tile.getNode().setOnMouseClicked(e -> {
-                    gameManager.handleTileClick(finalX, finalY);
+                    String newInstructionText = gameManager.handleTileClick(finalX, finalY);
+                    instructionsLabel.setText(newInstructionText);
                     Unit selected = gameManager.getSelectedUnit();
 
                     for (int i = 0; i < sideButtons.length; i++) {
@@ -219,6 +229,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                                     sideButtons[j].setOnMouseClicked(null);
                                 }
                                 gameManager.handleAttackClick(attacks.get(index));
+                                instructionsLabel.setText("Select a unit or end turn");
                                 redrawBoard();
                             }); //e renamed to event to not use twice
                         }
@@ -226,8 +237,10 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
                     if (selected != null && selected.getCanCurrentlySummon()) {
                         summonButton.setText("Summon");
+
                         summonButton.setOnMouseClicked(event -> {
                             gameManager.handleSummonButtonClick();
+                            instructionsLabel.setText("Select a location to summon a new unit");
                         });
                     } else{
                         summonButton.setText("");
@@ -246,6 +259,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                                     sideButtons[j].setOnMouseClicked(null);
                                 }
                                 gameManager.handleSummonClick(summonableUnits.get(index));
+                                instructionsLabel.setText("Select a unit or end turn");
                                 redrawBoard();
                             });
                         }

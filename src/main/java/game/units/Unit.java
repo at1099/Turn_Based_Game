@@ -8,6 +8,7 @@ import java.util.List;
 
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public class Unit {
 
@@ -29,7 +30,7 @@ public class Unit {
     private List<AttackType> attacks;
     private List<UnitType> summonableUnits;
 
-    private AttackType attackedBy;
+    private List<AttackType> attacksReceived = new ArrayList<>();
 
     public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
@@ -47,15 +48,18 @@ public class Unit {
         this.currentHealth = type.getMaxHealth();
         this.attacks = new ArrayList<>(type.getAttacks());
 
-        this.attackedBy = null;
+        this.attacksReceived = null;
     }
 
     public void resetUnit(){
         this.hasMoved = false;
         this.hasAttacked = false;
+        if (this.destination != null){
+            this.destination.setHighlightColour(Color.TRANSPARENT);
+        }
         this.destination =  null;
         this.state = UnitState.IDLE;
-        this.attackedBy = null;
+        this.attacksReceived = null;
         this.enemyToAttack = null;
         this.hasSummoned = false;
     }
@@ -120,12 +124,12 @@ public class Unit {
         return attacks;
     }
 
-    public AttackType getAttackedBy(){
-        return attackedBy;
+    public List<AttackType> getAttacksReveived(){
+        return attacksReceived;
     }
 
-    public void setAttackedBy(AttackType attackedBy){
-        this.attackedBy = attackedBy;
+    public void addAttackReceived(AttackType attackedBy){
+        attacksReceived.add(attackedBy);
     }
 
     public Unit getEnemyToAttack(){
@@ -153,11 +157,15 @@ public class Unit {
     }
 
     public void takeDamage() {
-        currentHealth -= attackedBy.getDamage();
-        if (currentHealth < 0) {
-            currentHealth = 0;
+        for (AttackType attack: attacks) {
+            currentHealth -= attack.getDamage();
+
+            if (currentHealth < 0) {
+                currentHealth = 0;
+                break;
+            }
         }
-        attackedBy = null;
+        attacksReceived = null;
     }
 
     public void heal(int amount) {
