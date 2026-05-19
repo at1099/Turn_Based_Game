@@ -30,7 +30,7 @@ public class Unit {
     private List<AttackType> attacks;
     private List<UnitType> summonableUnits;
 
-    private List<AttackType> attacksReceived = new ArrayList<>();
+    private List<AttackType> attacksReceived;
 
     public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
@@ -48,7 +48,7 @@ public class Unit {
         this.currentHealth = type.getMaxHealth();
         this.attacks = new ArrayList<>(type.getAttacks());
 
-        this.attacksReceived = null;
+        this.attacksReceived = new ArrayList<>();
     }
 
     public void resetUnit(){
@@ -59,7 +59,7 @@ public class Unit {
         }
         this.destination =  null;
         this.state = UnitState.IDLE;
-        this.attacksReceived = null;
+        this.attacksReceived.clear();
         this.enemyToAttack = null;
         this.hasSummoned = false;
     }
@@ -165,7 +165,7 @@ public class Unit {
                 break;
             }
         }
-        attacksReceived = null;
+        attacksReceived.clear();
     }
 
     public void heal(int amount) {

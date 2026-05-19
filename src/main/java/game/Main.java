@@ -215,7 +215,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                         sideButtons[i].setOnMouseClicked(null);
                     }
 
-                    if (selected != null && selected.getState() == UnitState.READY_TO_ATTACK) {
+                    if (selected != null && selected.getState().equals(UnitState.READY_TO_ATTACK)){
 
                         List<AttackType> attacks = selected.getAttacks();
 
@@ -247,7 +247,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                         summonButton.setOnMouseClicked(null);
                     }
 
-                    if (selected != null && selected.getState() == UnitState.READY_TO_SUMMON) {
+                    if (selected != null && selected.getState().equals(UnitState.READY_TO_SUMMON)){
                         List<UnitType> summonableUnits = selected.getType().getSummonableUnits();
 
                         for (int i = 0; i < summonableUnits.size(); i++) {
@@ -316,7 +316,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                     tile.setBorderHighlight(unit.getCurrentTeam().getColour());
                     tile.updateHealthBar();
 
-                    if (unit.getState() == UnitState.READY_TO_ATTACK && unit.getDestination() != null) {
+                    if (unit.getState().equals(UnitState.READY_TO_ATTACK) && unit.getDestination() != null) {
                         unit.getDestination().setHighlightColour(unit.getCurrentTeam().getColour());
                     }
 

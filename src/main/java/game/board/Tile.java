@@ -136,10 +136,6 @@ public class Tile {
         return type;
     }
 
-    public boolean getWalkable(){
-        return type.getWalkable();
-    }
-
     public int getMovementCost(){
         return type.getMovementCost();
     }

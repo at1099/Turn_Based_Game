@@ -1,9 +1,6 @@
 package game;
 
-import game.board.Building;
-import game.board.BuildingType;
-import game.board.GameMap;
-import game.board.Tile;
+import game.board.*;
 import game.units.AttackType;
 import game.units.Unit;
 import game.units.UnitState;
@@ -95,10 +92,12 @@ public class GameManager {
             int ny = destinationY + d[1];
             if(nx >= 0 && nx < currentLevel.getWidth() && ny >= 0 && ny < currentLevel.getHeight()){
                 Tile currentTile = currentLevel.getTile(nx, ny);
-                if (closestTile == null){
-                    closestTile = currentTile;
-                } else if (unit.getDistance(currentTile) < unit.getDistance(closestTile)) {
-                    closestTile = currentTile;
+                if (currentTile.getUnit() == null && currentTile.getHighlight().getFill().equals(Color.TRANSPARENT) || currentTile.getUnit().equals(unit)){
+                    if (closestTile == null){
+                        closestTile = currentTile;
+                    } else if (unit.getDistance(currentTile) < unit.getDistance(closestTile)) {
+                        closestTile = currentTile;
+                    }
                 }
             }
         }
@@ -107,7 +106,6 @@ public class GameManager {
     }
 
     public void moveAttackingUnit(Unit unit, Tile destination){
-        resetSelectedUnit();
 
         unit.setDestination(findAttackPos(unit, destination));
         unit.setState(UnitState.READY_TO_ATTACK);
@@ -158,7 +156,7 @@ public class GameManager {
     }
 
     public void handleAttackClick(AttackType attack){
-        if (selectedUnit != null && selectedUnit.getState() == UnitState.READY_TO_ATTACK){
+        if (selectedUnit != null && selectedUnit.getState().equals(UnitState.READY_TO_ATTACK)){
             Unit enemy = selectedUnit.getEnemyToAttack();
             enemy.addAttackReceived(attack);
 
@@ -178,11 +176,11 @@ public class GameManager {
 
         if (selectedUnit == null) {
             //if an idle unit is selected
-            if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() == UnitState.IDLE) {
+            if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam().equals(turnManager.getCurrentTurn()) && clickedTile.getUnit().getState().equals(UnitState.IDLE)) {
                 selectedUnit = clickedTile.getUnit();
                 returnString =  "Unit selected, choose a location to move to or an enemy player to attack";
 
-                if (clickedTile.getBuilding() != null && clickedTile.getBuilding().getType() == BuildingType.CASTLE) {
+                if (clickedTile.getBuilding() != null && clickedTile.getBuilding().getType().equals(BuildingType.CASTLE)){
                     selectedUnit.setCanCurrentlySummon(true);
                     returnString = "Unit selected, choose a location to move to, an enemy to attack or summon a new unit";
                 }
@@ -193,7 +191,7 @@ public class GameManager {
                 setSelectedUnit(selectedUnit);
                 highlightMoveSquares(selectedUnit);
             //if a unit not in idle is selected (resets)
-            } else if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn() && clickedTile.getUnit().getState() != UnitState.IDLE) {
+            } else if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam().equals(turnManager.getCurrentTurn()) && !clickedTile.getUnit().getState().equals(UnitState.IDLE)){
                 Unit unit = clickedTile.getUnit();
                 unit.resetUnit();
                 unitsToAttack.remove(unit);
@@ -204,19 +202,19 @@ public class GameManager {
         //if unit is already selected
         } else {
             //if a unit on the same team is selected (resets)
-            if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() == turnManager.getCurrentTurn()) {
+            if (clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam().equals(turnManager.getCurrentTurn())){
                 resetSelectedUnit();
                 clearHighlights();
 
             //if an empty square is picked (and unit not about to summon)
-            } else if (selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null && selectedUnit.getState() != UnitState.SELECTING_SUMMON_LOC) {
+            } else if (selectedUnit.canMove(clickedTile) && clickedTile.getUnit() == null && !selectedUnit.getState().equals(UnitState.SELECTING_SUMMON_LOC) && clickedTile.getHighlight().getFill().equals(Color.TRANSPARENT)) {
                 moveUnit(selectedUnit, clickedTile);
             //if enemy unit is selected to attack
-            } else if (selectedUnit.canMove(clickedTile) && clickedTile.getUnit() != null && clickedTile.getUnit().getCurrentTeam() != selectedUnit.getCurrentTeam()) {
+            } else if (selectedUnit.canMove(clickedTile) && clickedTile.getUnit() != null && !clickedTile.getUnit().getCurrentTeam().equals(selectedUnit.getCurrentTeam())){
                 moveAttackingUnit(selectedUnit, clickedTile);
                 returnString = "Choose one of the selected unit's attacks to use";
             //if the user is selecting a location to summon an ally
-            } else if (clickedTile.getUnit() == null && selectedUnit != null && selectedUnit.getState() == UnitState.SELECTING_SUMMON_LOC) {
+            } else if (clickedTile.getUnit() == null && selectedUnit != null && selectedUnit.getState().equals(UnitState.SELECTING_SUMMON_LOC) && clickedTile.getHighlight().getFill().equals(Color.TRANSPARENT)) {
                 selectSummonLocation(clickedTile);
                 returnString = "Choose a unit type to summon in this location";
             }
