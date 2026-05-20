@@ -18,7 +18,7 @@ public class Unit {
     private boolean hasAttacked;
     private boolean hasMoved;
     private boolean hasSummoned;
-    private String name;
+    //private String name;
     private PlayerTurn currentTeam;
 
     private UnitType type;
@@ -32,14 +32,14 @@ public class Unit {
 
     private List<AttackType> attacksReceived;
 
-    public Unit(Tile position, String name, PlayerTurn currentTeam, UnitType type, UnitState state) {
+    public Unit(Tile position, PlayerTurn currentTeam, UnitType type, UnitState state) {
         this.position = position;
         this.destination = null;
         this.enemyToAttack = null;
         this.hasMoved = false;
         this.hasAttacked = false;
         this.hasSummoned = false;
-        this.name = name;
+        //this.name = name;
         this.currentTeam = currentTeam;
         this.type = type;
         this.state = state;
@@ -150,6 +150,10 @@ public class Unit {
 
     public int getCurrentHealth() {
         return currentHealth;
+    }
+
+    public void setCurrentHealth(int currentHealth) {
+        this.currentHealth = currentHealth;
     }
 
     public boolean isDead(){

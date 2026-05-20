@@ -1,27 +1,25 @@
 package game;
 
-import game.board.Building;
-import game.board.BuildingType;
-import game.board.GameMap;
-import game.board.Tile;
+import game.board.*;
 import game.units.*;
 
 import javafx.application.Application;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage; //is the window
 import javafx.scene.Scene; //one screen inside a window (e.g. main menu)
-import javafx.scene.layout.VBox; //layout that stacks items vertically
 import javafx.scene.control.Button; //lets you create buttons
 import javafx.scene.control.Label; //allows you to display text
 import javafx.geometry.Pos; //controls alignment of layouts
-import javafx.scene.layout.GridPane; //lets you make gridPnaes
 import javafx.scene.text.Font;
 
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.geometry.Insets;
 
 import java.awt.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -38,12 +36,13 @@ public class Main extends Application { //main inherits behaviour from Applicati
     private final int TILE_SIZE = 50;
 
     public Button[] sideButtons;
+    public Button endTurnButton;
     public Button summonButton;
+    public Button saveButton;
+    public Button loadButton;
     public static void main(String[] args) {
         launch(args); //starts javafx, creates ui thread and calls start()
     }
-
-    List<Unit> units = new ArrayList<>();
 
 
     @Override
@@ -70,51 +69,13 @@ public class Main extends Application { //main inherits behaviour from Applicati
         window.show(); //shows scene
     }
 
-    private void createUnit(int x, int y, String name, PlayerTurn playerTurn, UnitType type) {
-        /*switch (type){
-            case KING:
-                Tile knightTile = gameMap.getTile(x, y);
-                Unit knight = new Unit(knightTile, "Knight", playerTurn, type, UnitState.IDLE);
-                knightTile.setUnit(knight);
-                units.add(knight);
-                break;
-            case LIGHT_SOLDIER:
-                Tile kingTile = gameMap.getTile(x, y);
-                Unit king = new Unit(kingTile, "Knight", playerTurn, type, UnitState.IDLE);
-                kingTile.setUnit(king);
-                units.add(king);
-                break;
-            case LIGHT_ARCHER:
-                Tile archerTile = gameMap.getTile(x, y);
-                Unit archer = new Unit(archerTile, "Archer", PlayerTurn.ENEMY, type, UnitState.IDLE);
-                archerTile.setUnit(archer);
-                units.add(archer);
-                break;
-        }*/
-
-        Tile tile = gameMap.getTile(x,y);
-        Unit unit = new Unit(tile, name, playerTurn, type, UnitState.IDLE);
-        tile.setUnit(unit);
-        units.add(unit);
-
+    public void saveGame(){
+        gameManager.saveGame();
     }
 
-    private void createBuilding(int x, int y, BuildingType type) {
-        /* switch(type){
-            case CASTLE:
-                Tile castleTile = gameMap.getTile(x, y);
-                Building castle = new Building(type, castleTile);
-                castleTile.setBuilding(castle);
-                break;
-            case VILLAGE:
-                Tile villageTile = gameMap.getTile(x, y);
-                Building village = new Building(type, villageTile);
-                villageTile.setBuilding(village);
-        } */
-
-        Tile tile = gameMap.getTile(x, y);
-        Building building = new Building(type, tile);
-        tile.setBuilding(building);
+    public void loadGame(){
+        gameManager.loadGame();
+        redrawBoard();
     }
 
     private Scene createGameScene() {
@@ -145,7 +106,7 @@ public class Main extends Application { //main inherits behaviour from Applicati
                                             //called root because it is the highest level layout that stores other layouts inside it
 
         // create the end turn button
-        Button endTurnButton = new Button("End Turn");
+        endTurnButton = new Button("End Turn");
         endTurnButton.setStyle("-fx-font-size: 48px;"); //makes button bigger
         endTurnButton.setPrefSize(300, 100);
         endTurnButton.setOnAction(e -> {
@@ -167,6 +128,16 @@ public class Main extends Application { //main inherits behaviour from Applicati
         summonButton.setStyle("-fx-font-size: 48px;");
         summonButton.setPrefSize(300, 100);
 
+        saveButton = new Button("Save");
+        saveButton.setStyle("-fx-font-size: 48px;");
+        saveButton.setPrefSize(300, 100);
+        saveButton.setOnAction(e -> {saveGame();});
+
+        loadButton = new Button("Load");
+        loadButton.setStyle("-fx-font-size: 48px;");
+        loadButton.setPrefSize(300, 100);
+        loadButton.setOnAction(e-> {loadGame();});
+
         // side buttons
         sideButtons = new Button[4];
         for (int i = 0; i < 4; i++) {
@@ -186,10 +157,20 @@ public class Main extends Application { //main inherits behaviour from Applicati
         sideBar.setPadding(new Insets(10));
 
         // container for the bottom buttons
-        HBox bottomBar = new HBox(summonButton, endTurnButton);
-        bottomBar.setAlignment(Pos.BOTTOM_RIGHT); // align button to the right
-        bottomBar.setPadding(new Insets(10));  // add spacing from screen edges
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox bottomBar = new HBox(
+                saveButton,
+                loadButton,
+                spacer,
+                summonButton,
+                endTurnButton
+        );
+
+        bottomBar.setPadding(new Insets(10));
         bottomBar.setSpacing(10);
+        bottomBar.setAlignment(Pos.CENTER);
 
         GridPane mapGrid = new GridPane();
 
@@ -292,13 +273,13 @@ public class Main extends Application { //main inherits behaviour from Applicati
 
 
         // Place static buildings (set once, no redraw needed)
-        createBuilding(3,3, BuildingType.CASTLE);
-        createBuilding(6,7, BuildingType.VILLAGE);
+        gameManager.createBuilding(3,3, BuildingType.CASTLE);
+        gameManager.createBuilding(6,7, BuildingType.VILLAGE);
 
         //Place units
-        createUnit(3,2, "Knight", PlayerTurn.PLAYER, UnitType.KING);
-        createUnit(1,1 , "Knight", PlayerTurn.PLAYER, UnitType.LIGHT_SOLDIER);
-        createUnit(4,4, "Archer", PlayerTurn.ENEMY, UnitType.LIGHT_ARCHER);
+        gameManager.createUnit(3,2, PlayerTurn.PLAYER, UnitType.KING);
+        gameManager.createUnit(1,1 , PlayerTurn.PLAYER, UnitType.LIGHT_SOLDIER);
+        gameManager.createUnit(4,4, PlayerTurn.ENEMY, UnitType.LIGHT_ARCHER);
 
         // Initial draw (highlights/units)
         redrawBoard();

@@ -87,7 +87,6 @@ public class Tile {
             building.setPosition(this);
         } else {
             buildingImage.setImage(null);
-            building.setPosition(null);
         }
     }
 
@@ -115,7 +114,6 @@ public class Tile {
             unit.setPosition(this);
         } else {
             unitImage.setImage(null);
-            unit.setPosition(null);
         }
     }
 

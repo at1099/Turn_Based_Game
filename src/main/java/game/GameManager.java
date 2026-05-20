@@ -1,29 +1,55 @@
 package game;
 
 import game.board.*;
-import game.units.AttackType;
-import game.units.Unit;
-import game.units.UnitState;
-import game.units.UnitType;
+import game.units.*;
 import javafx.scene.paint.Color;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.System.out;
 
 public class GameManager {
-    private GameMap currentLevel;
+    private GameMap gameMap;
     private Unit selectedUnit;
     private TurnManager turnManager;
+
+    List<Unit> units = new ArrayList<>();
+    List<Building> buildings = new ArrayList<>();
+
     List<Unit> unitsToMove = new ArrayList<>();
     List<Unit> unitsToAttack = new ArrayList<>();
     List<Unit> unitsToSummon = new ArrayList<>();
 
-    public GameManager(GameMap currentLevel){
-        this.currentLevel = currentLevel;
+    public GameManager(GameMap gameMap){
+        this.gameMap = gameMap;
         selectedUnit = null;
         turnManager = new TurnManager(PlayerTurn.PLAYER);
+    }
+    //with x, y
+    public void createUnit(int x, int y, PlayerTurn playerTurn, UnitType type) {
+        Tile tile = gameMap.getTile(x,y);
+        Unit unit = new Unit(tile, playerTurn, type, UnitState.IDLE);
+        tile.setUnit(unit);
+        units.add(unit);
+
+    }
+    //with tile
+    public void createUnit(Tile tile, PlayerTurn playerTurn, UnitType type) {
+        Unit unit = new Unit(tile, playerTurn, type, UnitState.IDLE);
+        tile.setUnit(unit);
+        units.add(unit);
+    }
+
+    public void createBuilding(int x, int y, BuildingType type) {
+        Tile tile = gameMap.getTile(x, y);
+        Building building = new Building(type, tile);
+        tile.setBuilding(building);
+        buildings.add(building);
     }
 
     public void resetSelectedUnit(){
@@ -51,14 +77,14 @@ public class GameManager {
     }
 
     public GameMap getMap(){
-        return currentLevel;
+        return gameMap;
     }
 
 
     public void clearHighlights(){
-        for(int x = 0; x < currentLevel.getWidth(); x++){
-            for(int y = 0; y < currentLevel.getHeight(); y++){
-                currentLevel.getTile(x,y).setHighlightColour(Color.TRANSPARENT);
+        for(int x = 0; x < gameMap.getWidth(); x++){
+            for(int y = 0; y < gameMap.getHeight(); y++){
+                gameMap.getTile(x,y).setHighlightColour(Color.TRANSPARENT);
             }
         }
     }
@@ -90,8 +116,8 @@ public class GameManager {
         for(int[] d : directions){
             int nx = destinationX + d[0];
             int ny = destinationY + d[1];
-            if(nx >= 0 && nx < currentLevel.getWidth() && ny >= 0 && ny < currentLevel.getHeight()){
-                Tile currentTile = currentLevel.getTile(nx, ny);
+            if(nx >= 0 && nx < gameMap.getWidth() && ny >= 0 && ny < gameMap.getHeight()){
+                Tile currentTile = gameMap.getTile(nx, ny);
                 if (currentTile.getUnit() == null && currentTile.getHighlight().getFill().equals(Color.TRANSPARENT) || currentTile.getUnit().equals(unit)){
                     if (closestTile == null){
                         closestTile = currentTile;
@@ -113,9 +139,9 @@ public class GameManager {
     }
 
     public void highlightMoveSquares(Unit selectedUnit){
-        for(int x = 0; x < currentLevel.getWidth(); x++) {
-            for (int y = 0; y < currentLevel.getHeight(); y++) {
-                Tile currentTile = currentLevel.getTile(x,y);
+        for(int x = 0; x < gameMap.getWidth(); x++) {
+            for (int y = 0; y < gameMap.getHeight(); y++) {
+                Tile currentTile = gameMap.getTile(x,y);
                 if (!selectedUnit.canMove(currentTile)){
                     currentTile.setHighlightColour(currentTile.GREYED_OUT);
                 }else{
@@ -128,9 +154,9 @@ public class GameManager {
     }
 
     public void highlightSummonSquares(Unit selectedUnit){
-        for(int x = 0; x < currentLevel.getWidth(); x++) {
-            for (int y = 0; y < currentLevel.getHeight(); y++) {
-                Tile currentTile = currentLevel.getTile(x,y);
+        for(int x = 0; x < gameMap.getWidth(); x++) {
+            for (int y = 0; y < gameMap.getHeight(); y++) {
+                Tile currentTile = gameMap.getTile(x,y);
                 if (!selectedUnit.canSummonIn(currentTile)){
                     currentTile.setHighlightColour(currentTile.GREYED_OUT);
                 }
@@ -146,12 +172,11 @@ public class GameManager {
 
     public void handleSummonClick(UnitType unit){
         if (selectedUnit != null){
-            Unit newUnit = new Unit(selectedUnit.getDestination(), "Summoned Unit", selectedUnit.getCurrentTeam(), unit, UnitState.IDLE);
-            unitsToSummon.add(newUnit);
+            createUnit(selectedUnit.getDestination(), selectedUnit.getCurrentTeam(), unit);
+            unitsToSummon.add(units.get(units.size()-1));
 
             selectedUnit = null;
             clearHighlights();
-            out.println("Summoning unit: " + newUnit);
         }
     }
 
@@ -171,7 +196,7 @@ public class GameManager {
     }
 
     public String handleTileClick(int x, int y) {
-        Tile clickedTile = currentLevel.getTile(x, y);
+        Tile clickedTile = gameMap.getTile(x, y);
         String returnString = "Select a unit or end turn";
 
         if (selectedUnit == null) {
@@ -223,9 +248,9 @@ public class GameManager {
     }
 
     public void switchTurn(){
-        for(int x = 0; x < currentLevel.getWidth(); x++){
-            for(int y = 0; y < currentLevel.getHeight(); y++){
-                Tile currentTile = currentLevel.getTile(x,y);
+        for(int x = 0; x < gameMap.getWidth(); x++){
+            for(int y = 0; y < gameMap.getHeight(); y++){
+                Tile currentTile = gameMap.getTile(x,y);
                 currentTile.setHighlightColour(Color.TRANSPARENT); //resets highlights
             }
         }
@@ -243,12 +268,12 @@ public class GameManager {
 
             unit.resetUnit();
             if (enemy.isDead()){
-                currentLevel.removeUnit(enemy);
+                gameMap.removeUnit(enemy);
             }
         }
 
         for (Unit unit : unitsToSummon){
-            currentLevel.placeUnit(unit, unit.getPosition().getX(), unit.getPosition().getY());
+            gameMap.placeUnit(unit, unit.getPosition().getX(), unit.getPosition().getY());
         }
 
         unitsToMove.clear();
@@ -257,5 +282,120 @@ public class GameManager {
         turnManager.switchTurn();
         resetSelectedUnit();
 
+    }
+
+    public void saveGame() {
+
+        try {
+
+            SaveData saveData = new SaveData();
+
+            saveData.currentTurn = getTurnManager().getCurrentTurn();
+
+            //Save units
+            for (Unit unit : units) {
+
+                UnitData data = new UnitData();
+
+                data.x = unit.getPosition().getX();
+                data.y = unit.getPosition().getY();
+
+                data.name = unit.getType().toString();
+
+                data.team = unit.getCurrentTeam();
+                data.type = unit.getType();
+
+                data.currentHealth = unit.getCurrentHealth();
+                saveData.units.add(data);
+            }
+
+            //Save buildings
+            for (Building building : buildings) {
+
+                BuildingData data = new BuildingData();
+
+                data.x = building.getPosition().getX();
+                data.y = building.getPosition().getY();
+
+                data.type = building.getType();
+
+                saveData.buildings.add(data);
+            }
+
+            ObjectOutputStream out =
+                    new ObjectOutputStream(
+                            new FileOutputStream("save.dat")
+                    );
+
+            out.writeObject(saveData);
+
+            out.close();
+
+            System.out.println("Saved");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadGame() {
+
+        try {
+
+            ObjectInputStream in =
+                    new ObjectInputStream(
+                            new FileInputStream("save.dat")
+                    );
+
+            SaveData saveData =
+                    (SaveData) in.readObject();
+
+            in.close();
+
+            //Clear current game
+            units.clear();
+            buildings.clear();
+
+            // CLEAR TILES
+            for (int x = 0; x < gameMap.getWidth(); x++) {
+                for (int y = 0; y < gameMap.getHeight(); y++) {
+
+                    Tile tile = gameMap.getTile(x, y);
+
+                    tile.removeUnit();
+                    tile.setBuilding(null);
+                }
+            }
+
+            //Load buildings
+            for (BuildingData data : saveData.buildings) {
+
+                Tile tile = gameMap.getTile(data.x, data.y);
+
+                Building building =
+                        new Building(data.type, tile);
+
+                tile.setBuilding(building);
+
+                buildings.add(building);
+            }
+
+            //Load units
+            for (UnitData data : saveData.units) {
+
+                Tile tile = gameMap.getTile(data.x, data.y);
+
+                Unit unit = new Unit(tile, data.team, data.type, UnitState.IDLE);
+                unit.setCurrentHealth(data.currentHealth);
+                tile.setUnit(unit);
+
+                units.add(unit);
+            }
+
+            System.out.println("Loaded");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
